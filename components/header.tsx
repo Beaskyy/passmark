@@ -18,10 +18,18 @@ export const Header = () => {
   const pathname = usePathname();
 
   return (
-    <div className="h-20 py-5 lg:px-[108px] md:px-[20] px-5 border-b border-[#EBEBEB]">
+    <div className="lg:h-20 h-16 lg:py-5 py-3 lg:px-[108px] md:px-[20] px-5 border-b border-[#EBEBEB]">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-6">
-          <Image src="/images/logo.png" alt="logo" width={40} height={40} />
+          <Link href={"/"}>
+            <Image
+              src="/images/logo.png"
+              alt="logo"
+              width={40}
+              height={40}
+              className="lg:size-10 size-7"
+            />
+          </Link>
           <div className="hidden lg:flex items-center gap-1 text-sm font-medium">
             {links.map((link) => (
               <Link
