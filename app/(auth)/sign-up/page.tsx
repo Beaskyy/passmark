@@ -64,7 +64,7 @@ const SignUp = () => {
       console.log({ email, password, confirmPassword });
       toast.success("Account created successfully");
       setTimeout(() => {
-        router.push("/login");
+        router.push("/");
       }, 1000);
     }
     setLoading(false);
