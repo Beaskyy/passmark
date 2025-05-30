@@ -21,6 +21,7 @@ const SignUp = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -48,6 +49,7 @@ const SignUp = () => {
       setEmailError(emailErr);
       if (!emailErr) {
         setCurrentStep(2);
+        
       }
       return;
     }
@@ -65,6 +67,7 @@ const SignUp = () => {
         router.push("/login");
       }, 1000);
     }
+    setLoading(false);
   };
 
   return (
@@ -200,7 +203,7 @@ const SignUp = () => {
               </div>
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                  <Button type="submit" className="rounded-full font-geist">
+                  <Button type="submit" className="rounded-full font-geist" disabled={loading}>
                     {currentStep === 1 ? "Continue" : "Create account"}
                   </Button>
                   {currentStep === 1 && (
