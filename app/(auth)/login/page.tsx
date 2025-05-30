@@ -18,6 +18,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -33,11 +34,13 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     if (currentStep === 1) {
       const emailErr = validateEmail(email);
       setEmailError(emailErr);
       if (!emailErr) {
         setCurrentStep(2);
+        setLoading(false);
       }
       return;
     }
@@ -47,7 +50,9 @@ const Login = () => {
     if (!passwordErr) {
       toast.success("Login successful");
       router.push("/");
+      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
@@ -78,7 +83,10 @@ const Login = () => {
                   <Input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError("");
+                    }}
                     placeholder="yourname@company.com"
                     className="w-full"
                     required
@@ -99,7 +107,10 @@ const Login = () => {
                         placeholder="********"
                         className="w-full pr-10"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setPasswordError("");
+                        }}
                         required
                       />
                       <button
@@ -125,7 +136,11 @@ const Login = () => {
             </div>
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-4">
-                <Button type="submit" className="rounded-full font-geist">
+                <Button
+                  type="submit"
+                  className="rounded-full font-geist"
+                  disabled={loading}
+                >
                   Continue
                 </Button>
                 {currentStep === 1 && (
