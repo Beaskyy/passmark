@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import Link from "next/link";
 
 export default function UserHeader() {
   return (
@@ -16,10 +17,10 @@ export default function UserHeader() {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-1 bg-gradient-to-t from-[#0068FF] to-[#0089FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium">
+      <Link href={'/new-course'} className="flex items-center gap-1 bg-gradient-to-t from-[#0068FF] to-[#0089FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium">
         <Plus className="lg:size-5 size-4" />
         <span>Create New Course</span>
-      </div>
+      </Link>
     </div>
   );
 }
