@@ -72,22 +72,22 @@ export const Header = () => {
               />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[183px] py-3">
-              <DropdownMenuLabel>
-                <Link
-                  href={"/profile"}
-                  className="text-sm font-medium text-[#333333]"
-                >
+              <DropdownMenuLabel
+                onSelect={() => (window.location.href = "/profile")}
+                className="cursor-pointer"
+              >
+                <span className="text-sm font-medium text-[#333333]">
                   My Profile
-                </Link>
+                </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link
-                  href={"/login"}
-                  className="text-sm font-medium text-[#F11B1B]"
-                >
+              <DropdownMenuItem
+                onSelect={() => (window.location.href = "/login")}
+                className="cursor-pointer"
+              >
+                <span className="text-sm font-medium text-[#F11B1B]">
                   Log out
-                </Link>
+                </span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
