@@ -54,7 +54,7 @@ export const Header = () => {
             height={40}
           />
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 lg:h-10 h-9 py-2 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-9 pl-1 pt-[3px] pr-2 border border-[#EBEBEB] rounded-[22px]">
               <div className="flex justify-center items-center gap-2">
                 <Image
                   src="/images/profile.svg"

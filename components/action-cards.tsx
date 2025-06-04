@@ -5,7 +5,7 @@ export default function ActionCards() {
     <div className="grid lg:grid-cols-2 grid-cols-1 gap-[14px]">
       <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px]">
         <div className="flex flex-col lg:gap-2">
-          <h4 className="text-black lg:text-base text-sm lg:font-bold font-medium">
+          <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
             Mark a New Script
           </h4>
           <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
@@ -22,7 +22,7 @@ export default function ActionCards() {
       </div>
       <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px]">
         <div className="flex flex-col lg:gap-2">
-          <h4 className="text-black lg:text-base text-sm lg:font-bold font-medium">
+          <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
             Manage Marked Scripts
           </h4>
           <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
