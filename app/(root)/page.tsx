@@ -173,7 +173,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="flex flex-col gap-5">
+    <main className="flex flex-col gap-5 lg:px-[108px] md:px-[20] px-5">
       <UserHeader />
       <ActionCards />
       <DataTable

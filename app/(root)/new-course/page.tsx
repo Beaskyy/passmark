@@ -1,3 +1,5 @@
+"use client"
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
@@ -11,11 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const NewCourse = () => {
+  const router = useRouter()
   return (
-    <main>
-      <div className="flex lg:flex-row flex-col justify-between lg:items-center py-5 gap-4">
+    <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
+      <div className="flex justify-between lg:items-center gap-4">
         <div className="flex items-center gap-3">
           <Link href="/">
             <Image src="/images/back.svg" alt="back" width={44} height={44} />
@@ -26,7 +30,7 @@ const NewCourse = () => {
         </div>
         <Image src="/images/spinner.svg" alt="spinner" width={32} height={32} />
       </div>
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-3.5 mt-6">
         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
           <div className="flex flex-col gap-1">
             <Label className="text-sm text-[#171717] font-medium">
@@ -71,7 +75,7 @@ const NewCourse = () => {
           />
         </div>
       </div>
-      <Button className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF]">Continue</Button>
+      <Button className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF]" onClick={() => router.push('/my-script')}>Continue</Button>
     </main>
   );
 };
