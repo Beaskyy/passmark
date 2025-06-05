@@ -20,7 +20,7 @@ const NewCourse = () => {
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mt-2">
           <Link href="/">
             <Image src="/images/back.svg" alt="back" width={44} height={44} />
           </Link>
