@@ -43,7 +43,7 @@ const NewStudent = () => {
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mt-2">
           <Link href="/">
             <Image src="/images/back.svg" alt="back" width={44} height={44} />
           </Link>
@@ -104,7 +104,7 @@ const NewStudent = () => {
           Add New Student(s)
         </div>
       </div>
-      <Button className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF]">
+      <Button className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF] max-h-10">
         Continue
       </Button>
     </main>
