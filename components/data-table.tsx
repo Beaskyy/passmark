@@ -41,6 +41,8 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   searchKey: string;
   tableName: string;
+  getId: (row: TData) => string | number;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -48,6 +50,8 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   tableName,
+  getId,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -109,7 +113,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="text-sm text-[#5C5C5C] font-medium tracking-[-0.6%] leading-[20.3px] bg-[#FAFAFA] px-6 py-4"
+                      className="text-sm text-[#5C5C5C] font-medium tracking-[-0.6%] leading-[20.3px] bg-[#FAFAFA]"
                     >
                       {header.isPlaceholder
                         ? null
@@ -129,6 +133,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={onRowClick ? "cursor-pointer" : ""}
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
