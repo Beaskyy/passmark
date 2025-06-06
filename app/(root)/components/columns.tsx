@@ -67,7 +67,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="flex items-center gap-0.5 cursor-pointer"
         >
-          Student's ID
+          Student&apos;s ID
           <Image
             src="/images/up-down-fill.svg"
             alt="up-down-fill"
