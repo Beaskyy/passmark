@@ -103,7 +103,7 @@ const Profile = () => {
                     Update password
                   </DialogTitle>
                   <DialogDescription>
-                    update your account's password
+                    update your account&apos;s password
                   </DialogDescription>
                 </DialogHeader>
                 <form

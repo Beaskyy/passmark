@@ -12,7 +12,7 @@ const MyCourses = () => {
   const router = useRouter()
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
-      {coursesData.length === 0 ? (
+      {coursesData ? (
         <div className="flex flex-col gap-[27px]">
           <div className="flex flex-col gap-[27px]">
             <Link href="/">
