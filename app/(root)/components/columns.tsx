@@ -146,7 +146,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md">
+      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-[88px] h-6 p-1 pr-2 rounded-md">
         <Image
           src={`/images/${
             row.original?.status?.toLocaleLowerCase() === "approved"
@@ -190,7 +190,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
             key={index}
             className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
           >
-            <p className="text-[#5C5C5C] font-medium text-sm tracking-[-0.6px] leading-5">
+            <p className="text-[#5C5C5C] font-medium text-sm tracking-[-0.6px] leading-5 whitespace-nowrap">
               {action}
             </p>
           </div>
