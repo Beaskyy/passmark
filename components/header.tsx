@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { links } from "@/lib/data";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { Navigation } from "./navigation";
 
 export const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <div className="lg:h-20 h-16 lg:py-5 py-3 lg:px-[108px] md:px-[20] px-5 border-b border-[#EBEBEB]">
@@ -73,7 +74,7 @@ export const Header = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[183px] py-3">
               <DropdownMenuLabel
-                onSelect={() => (window.location.href = "/profile")}
+                onClick={() => router.push("/profile")}
                 className="cursor-pointer"
               >
                 <span className="text-sm font-medium text-[#333333]">
@@ -82,7 +83,7 @@ export const Header = () => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={() => (window.location.href = "/login")}
+                onSelect={() => router.push("/login")}
                 className="cursor-pointer"
               >
                 <span className="text-sm font-medium text-[#F11B1B]">
