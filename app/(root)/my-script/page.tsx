@@ -65,7 +65,7 @@ const MyScript = () => {
                   </div>
                   <FileUpload onFileSelect={handleFileSelect} />
                 </div>
-                <Button className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF] max-h-10">
+                <Button className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10">
                   Continue
                 </Button>
               </div>
@@ -85,7 +85,7 @@ const MyScript = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-4">
-                    <div className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white">
+                    <div className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden">
                       <div className="flex flex-col gap-1">
                         <h4 className="text-[15px] text-sm text-[#474545] font-semibold">
                           Add Manually
@@ -103,7 +103,7 @@ const MyScript = () => {
                       />
                     </div>
                     <div
-                      className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white cursor-pointer hover:opacity-95"
+                      className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white cursor-pointer hover:opacity-95 overflow-hidden"
                       onClick={() => setShowAddBulk(true)}
                     >
                       <div className="flex flex-col gap-1">
@@ -140,7 +140,7 @@ const MyScript = () => {
             </div>
             <div className="flex justify-center items-center">
               <Button
-                className="mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF]"
+                className="mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF]"
                 onClick={() => router.push("/new-student")}
               >
                 Skip

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 const NewCourse = () => {
-  const router = useRouter()
+  const router = useRouter();
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
@@ -75,7 +75,12 @@ const NewCourse = () => {
           />
         </div>
       </div>
-      <Button className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0068FF] to-[#0089FF]" onClick={() => router.push('/my-script')}>Continue</Button>
+      <Button
+        className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF]"
+        onClick={() => router.push("/my-script")}
+      >
+        Continue
+      </Button>
     </main>
   );
 };
