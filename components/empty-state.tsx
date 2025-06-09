@@ -20,7 +20,7 @@ const EmptyState = ({
   showIcon,
 }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col justify-center items-center min-h-[80vh]">
+    <div className="flex flex-col justify-center items-center min-h-[60vh]">
       <div className="flex flex-col justify-center items-center gap-[22px] max-w-[241px]">
         <Image src={image} alt="image" width={100} height={100} />
         <div className="flex flex-col gap-[13px] text-center">
