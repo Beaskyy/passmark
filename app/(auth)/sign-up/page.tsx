@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 const SignUp = () => {
   const router = useRouter();
@@ -21,7 +22,6 @@ const SignUp = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -42,32 +42,69 @@ const SignUp = () => {
     return "";
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const { mutate: createAccount, isPending: isCreatingAccount } = useMutation({
+    mutationFn: async ({ email, password, password2 }: any) => {
+      const response = await fetch(
+        "http://132.145.68.47:8000/account/create-account/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password, password2 }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.email || errorData.password || "Failed to create account"
+        );
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Account created successfully");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (currentStep === 1) {
       const emailErr = validateEmail(email);
       setEmailError(emailErr);
       if (!emailErr) {
         setCurrentStep(2);
-        
       }
       return;
     }
+
     // Step 2: validate password and confirmPassword
     const passwordErr = validatePassword(password);
     const confirmPasswordErr = validateConfirmPassword(confirmPassword);
     setPasswordError(passwordErr);
     setConfirmPasswordError(confirmPasswordErr);
+
     if (!passwordErr && !confirmPasswordErr) {
-      // Success: handle sign up
-      // Redirect or clear form as needed
-      console.log({ email, password, confirmPassword });
-      toast.success("Account created successfully");
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
+      try {
+        await createAccount({
+          email,
+          password,
+          password2: confirmPassword,
+        });
+      } catch (error) {
+        // Error handling is done in onError callback of useMutation
+        console.error("Mutation error: ", error);
+      }
     }
-    setLoading(false);
   };
 
   return (
@@ -203,7 +240,11 @@ const SignUp = () => {
               </div>
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                  <Button type="submit" className="rounded-full font-geist" disabled={loading}>
+                  <Button
+                    type="submit"
+                    className="rounded-full font-geist"
+                    disabled={isCreatingAccount}
+                  >
                     {currentStep === 1 ? "Continue" : "Create account"}
                   </Button>
                   {currentStep === 1 && (

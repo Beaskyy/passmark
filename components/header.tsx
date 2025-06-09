@@ -55,7 +55,7 @@ export const Header = () => {
           />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-9 pl-1 pt-[3px] pr-2 border border-[#EBEBEB] rounded-[22px]">
-              <div className="flex justify-center items-center gap-2">
+              <div className="flex justify-center items-center">
                 <Image
                   src="/images/profile.svg"
                   alt="profile"

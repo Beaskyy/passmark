@@ -190,7 +190,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
             key={index}
             className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
           >
-            <p className="text-[#5C5C5C] font-medium text-sm tracking-[-0.6px] leading-5 whitespace-nowrap">
+            <p className="text-[#5C5C5C] font-medium text-sm tracking-[0.6px] leading-5 whitespace-nowrap">
               {action}
             </p>
           </div>
