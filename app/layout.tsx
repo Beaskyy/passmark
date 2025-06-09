@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { inter, geist } from "./fonts";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Provider } from "@/components/providers/provider";
 
 export const metadata: Metadata = {
   title: "Passmark",
@@ -16,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${geist.variable}`}>
       <body>
-        {children}
+        <Provider>{children}</Provider>
         <Toaster richColors />
       </body>
     </html>
