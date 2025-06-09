@@ -51,7 +51,18 @@ export const columns: ColumnDef<MarkedScript>[] = [
     },
     cell: ({ row }) => (
       <div className="flex items-center gap-0.5">
-        <Image src="/images/png.svg" alt="doc" width={32} height={32} />
+        <Image
+          src={`/images/${
+            row.original?.scriptUploaded?.split(".")[1] === "pdf"
+              ? "pdf"
+              : row.original?.scriptUploaded?.split(".")[1] === "jpg"
+              ? "jpg"
+              : "png"
+          }.svg`}
+          alt="doc"
+          width={32}
+          height={32}
+        />
         <div>
           <p className="font-medium">{row.original?.scriptUploaded}</p>
           <small className="text-xs text-[#5C5C5C]">2.4 MB</small>
@@ -134,5 +145,57 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
+    cell: ({ row }) => (
+      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md">
+        <Image
+          src={`/images/${
+            row.original?.status?.toLocaleLowerCase() === "approved"
+              ? "check"
+              : "alert"
+          }.svg`}
+          alt="check"
+          width={16}
+          height={16}
+        />
+        <div>
+          <p className="text-[#5C5C5C] font-medium text-xs">
+            {row.original?.status}
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "actions",
+    header: ({ column }) => {
+      return (
+        <div
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-0.5 cursor-pointer"
+        >
+          Status
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+          />
+        </div>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        {row.original?.actions?.map((action: string, index: number) => (
+          <div
+            key={index}
+            className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
+          >
+            <p className="text-[#5C5C5C] font-medium text-sm tracking-[-0.6px] leading-5">
+              {action}
+            </p>
+          </div>
+        ))}
+      </div>
+    ),
   },
 ];

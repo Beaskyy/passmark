@@ -15,7 +15,7 @@ export const links = [
 
 export const markedScriptsData = [
   {
-    scriptUploaded: "brown-james.pdf",
+    scriptUploaded: "brown-james.png",
     studentId: 22343,
     courseCode: "CSC 343",
     dateMarked: "Feb 21, 2023 at 03:05 pm",
@@ -31,7 +31,7 @@ export const markedScriptsData = [
     actions: ["View Script"],
   },
   {
-    scriptUploaded: "brown-james.pdf",
+    scriptUploaded: "brown-james.jpg",
     studentId: 34324,
     courseCode: "CSC 343",
     dateMarked: "Feb 21, 2023 at 03:05 pm",
@@ -47,7 +47,7 @@ export const markedScriptsData = [
     actions: ["View Script"],
   },
   {
-    scriptUploaded: "brown-james.pdf",
+    scriptUploaded: "brown-james.jpg",
     studentId: 543345,
     courseCode: "CSC 343",
     dateMarked: "Sep 4, 2021 at 12:14 am",
@@ -63,7 +63,7 @@ export const markedScriptsData = [
     actions: ["View Script", "Approve"],
   },
   {
-    scriptUploaded: "brown-james.pdf",
+    scriptUploaded: "brown-james.jpg",
     studentId: 123432,
     courseCode: "CSC 343",
     dateMarked: "Jan 11, 2023 at 01:49 pm",

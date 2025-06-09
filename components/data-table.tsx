@@ -161,7 +161,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-        <div className="flex lg:flex-row flex-col justify-between items-end lg:items-center gap-4 p-6">
+        {/* <div className="flex lg:flex-row flex-col justify-between items-end lg:items-center gap-4 p-6">
           <div className="text-sm text-[#171717] font-semibold">
             Showing {startItem} to {endItem} of {totalItems} results
           </div>
@@ -202,7 +202,7 @@ export function DataTable<TData, TValue>({
               <ChevronRight className="w-5 h-5 text-black" />
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
