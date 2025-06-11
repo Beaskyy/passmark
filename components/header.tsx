@@ -13,10 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Navigation } from "./navigation";
+import { logout } from "@/lib/auth";
 
 export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+
+  const handleLogout = () => {
+    logout(router);
+  };
 
   return (
     <div className="lg:h-20 h-16 lg:py-5 py-3 lg:px-[108px] md:px-[20] px-5 border-b border-[#EBEBEB]">
@@ -83,7 +88,7 @@ export const Header = () => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={() => router.push("/login")}
+                onClick={handleLogout}
                 className="cursor-pointer"
               >
                 <span className="text-sm font-medium text-[#F11B1B]">
