@@ -5,35 +5,11 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import Script from "next/script";
-import Cookies from "js-cookie";
-import {
-  PublicClientApplication,
-  Configuration,
-  RedirectRequest,
-  PopupRequest,
-} from "@azure/msal-browser";
-import AppleSignin from "react-apple-signin-auth";
-
-declare global {
-  namespace google {
-    namespace accounts {
-      namespace id {
-        function initialize(config: {
-          client_id: string;
-          callback: (response: any) => void;
-        }): void;
-        function renderButton(element: HTMLElement, options: any): void;
-        function prompt(): void;
-      }
-    }
-  }
-}
 
 const SignUp = () => {
   const router = useRouter();
@@ -50,16 +26,6 @@ const SignUp = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [firstNameError, setFirstNameError] = useState("");
   const [lastNameError, setLastNameError] = useState("");
-
-  // MSAL configuration
-  const msalConfig: Configuration = {
-    auth: {
-      clientId: process.env.NEXT_PUBLIC_MICROSOFT_CLIENT_ID || "",
-      authority: "https://login.microsoftonline.com/common",
-      redirectUri: typeof window !== "undefined" ? window.location.origin : "",
-    },
-  };
-  const msalInstance = new PublicClientApplication(msalConfig);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -115,14 +81,29 @@ const SignUp = () => {
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.email || errorData.password || "Failed to create account"
-        );
+        // Handle array of errors
+        if (data.data) {
+          const errorMessages = Object.entries(data.data)
+            .map(([_, value]) => {
+              if (Array.isArray(value)) {
+                return value.join(", ");
+              }
+              return value;
+            })
+            .filter(Boolean)
+            .join(", ");
+
+          if (errorMessages) {
+            throw new Error(errorMessages);
+          }
+        }
+        throw new Error(data.message || "Failed to create account");
       }
 
-      return response.json();
+      return data;
     },
     onSuccess: () => {
       toast.success("Account created successfully");
@@ -130,86 +111,10 @@ const SignUp = () => {
         router.push("/");
       }, 1000);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(error.message || "Something went wrong. Please try again.");
     },
   });
-
-  const { mutate: socialAuth, isPending: isSocialAuthLoading } = useMutation({
-    mutationFn: async ({ token }: { token: string }) => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/account/social-auth`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Social login failed");
-      }
-
-      return response.json();
-    },
-    onSuccess: (data) => {
-      Cookies.set("access_token", data.access, { expires: 1 / 24 });
-      localStorage.setItem("user", JSON.stringify(data.user));
-      toast.success("Login successful");
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Something went wrong. Please try again.");
-    },
-  });
-
-  const handleGoogleCredentialResponse = useCallback(
-    (response: any) => {
-      if (response.credential) {
-        socialAuth({ token: response.credential });
-      }
-    },
-    [socialAuth]
-  );
-
-  const handleMicrosoftLogin = useCallback(async () => {
-    try {
-      const loginResponse = await msalInstance.loginPopup({
-        scopes: ["openid", "profile", "email"],
-      });
-      if (loginResponse.idToken) {
-        socialAuth({ token: loginResponse.idToken });
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Microsoft login failed");
-    }
-  }, [msalInstance, socialAuth]);
-
-  useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-        callback: handleGoogleCredentialResponse,
-      });
-
-      const googleButton = document.getElementById("google-login-button");
-      if (googleButton) {
-        window.google.accounts.id.renderButton(googleButton, {
-          type: "icon",
-          size: "large",
-          theme: "outline",
-          text: "signin_with",
-          shape: "rectangular",
-          width: "24",
-        });
-      }
-    }
-  }, [handleGoogleCredentialResponse]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -252,9 +157,8 @@ const SignUp = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-[1440px] bg-[#F9FAFB] min-h-screen">
-      <Script src="https://accounts.google.com/gsi/client" async defer></Script>
-      <div className="flex lg:flex-row flex-col gap-12 justify-between items-center lg:pt-[169px] py-10 lg:px-[96px]">
+    <div className="container mx-auto max-w-[1440px] bg-[#F9FAFB]">
+      <div className="flex lg:flex-row flex-col gap-12 justify-between items-center  py-10 lg:px-[96px] min-h-screen">
         <div className="flex justify-center items-center">
           <div className="flex flex-col gap-4 lg:max-w-[528px]">
             <div className="flex items-center gap-2">
@@ -423,7 +327,7 @@ const SignUp = () => {
                   <Button
                     type="submit"
                     className="rounded-full font-geist"
-                    disabled={isCreatingAccount || isSocialAuthLoading}
+                    disabled={isCreatingAccount}
                   >
                     {currentStep === 1 ? "Continue" : "Create account"}
                   </Button>
@@ -437,61 +341,23 @@ const SignUp = () => {
                         <span className="flex-1 border-[0.5px] border-[#F3F4F6]"></span>
                       </div>
                       <div className="grid grid-cols-3 lg:gap-3.5 gap-2">
-                        <div
-                          id="google-login-button"
-                          className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
-                        >
-                          {/* Google button will be rendered here by GSI */}
+                        <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
+                          <Image
+                            src="/images/google.svg"
+                            alt="google"
+                            width={24}
+                            height={24}
+                          />
                         </div>
-                        <AppleSignin
-                          authOptions={{
-                            clientId:
-                              process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
-                            scope: "email name",
-                            redirectURI: `${
-                              typeof window !== "undefined"
-                                ? window.location.origin
-                                : ""
-                            }/api/auth/apple/callback`,
-                            state: "state",
-                            nonce: "nonce",
-                            usePopup: true,
-                          }}
-                          onSuccess={(response: any) => {
-                            if (response.id_token) {
-                              socialAuth({ token: response.id_token });
-                            }
-                          }}
-                          onError={(error: any) => {
-                            toast.error(error.message || "Apple login failed");
-                          }}
-                          uiType="dark"
-                          noDefaultStyle={true}
-                          render={({
-                            onClick,
-                            disabled,
-                          }: {
-                            onClick: React.MouseEventHandler<HTMLDivElement>;
-                            disabled: boolean;
-                          }) => (
-                            <div
-                              className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
-                              onClick={onClick}
-                              style={{ opacity: disabled ? 0.6 : 1 }}
-                            >
-                              <Image
-                                src="/images/apple.svg"
-                                alt="apple"
-                                width={24}
-                                height={24}
-                              />
-                            </div>
-                          )}
-                        />
-                        <div
-                          className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
-                          onClick={handleMicrosoftLogin}
-                        >
+                        <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
+                          <Image
+                            src="/images/apple.svg"
+                            alt="apple"
+                            width={24}
+                            height={24}
+                          />
+                        </div>
+                        <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
                           <Image
                             src="/images/microsoft.svg"
                             alt="microsoft"
