@@ -1,6 +1,7 @@
 "use client";
 
 import { useMedia } from "react-use";
+import { useRouter } from "next/navigation";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -10,17 +11,23 @@ import Link from "next/link";
 import { links } from "@/lib/data";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { logout } from "@/lib/auth";
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
 
   const isMobile = useMedia("(max-width: 1024px)", false);
 
   const handleClick = (name: string) => {
     setActiveLink(name);
     setIsOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout(router);
   };
 
   if (isMobile) {
@@ -68,14 +75,19 @@ export const Navigation = () => {
               </div>
             </nav>
           </div>
-          <div className="flex flex-col gap-y-2" onClick={() => setIsOpen(false)}>
+          <div
+            className="flex flex-col gap-y-2"
+            onClick={() => setIsOpen(false)}
+          >
             <div className="flex items-center gap-x-2 text-sm text-[#333333]">
               <User size={14} />
               <Link href={"/profile"}>Profile</Link>
             </div>
             <div className="flex items-center gap-x-2 text-[#F11B1B] text-sm">
               <LogOut size={14} />
-              <Link href={"/login"}>Logout</Link>
+              <Link href={"/login"} onClick={handleLogout}>
+                Logout
+              </Link>
             </div>
           </div>
         </SheetContent>
