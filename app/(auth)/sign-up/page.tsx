@@ -84,6 +84,7 @@ const SignUp = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        setCurrentStep(1)
         // Handle array of errors
         if (data.data) {
           const errorMessages = Object.entries(data.data)
