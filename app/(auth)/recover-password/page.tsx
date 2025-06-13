@@ -64,39 +64,7 @@ const RecoverPassword = () => {
 
   return (
     <div className="container mx-auto max-w-[1440px] bg-[#F9FAFB] min-h-screen">
-      <div className="flex lg:flex-row flex-col gap-12 justify-between items-center lg:pt-[169px] py-10 lg:px-[96px]">
-        <div className="flex justify-center items-center">
-          <div className="flex flex-col gap-4 lg:max-w-[528px]">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/images/logo.svg"
-                alt="logo"
-                width={169}
-                height={40.48}
-              />
-            </div>
-            <div className="flex flex-col gap-4">
-              <h1 className="lg:text-[48px] text-3xl text-[#111827] font-semibold tracking-[-1%] lg:leading-[60px] lg:max-w-[423px]">
-                Let AI handle all the scripts
-              </h1>
-              <p className="lg:text-lg text-xs text-[#4B5563]">
-                Save hours with AI-assisted script marking that&apos;s fast,
-                fair, and accurate; so you can focus on what matters
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Image
-                src="/images/avatar-stack.svg"
-                alt="avatar-stack"
-                width={108}
-                height={36}
-              />
-              <p className="lg:text-sm text-xs text-[#4B5563] font-medium tracking-[-0.09px]">
-                Over 5k+ happy users
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="flex lg:flex-row flex-col gap-12 justify-center items-center lg:pt-[169px] py-10 lg:px-[96px]">
         <div className="flex flex-col gap-4">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(59.66%_49.84%_at_44.77%_47.75%,rgba(27,152,193,0.3)_0%,rgba(157,174,240,0.3)_100%)] rounded-full blur-3xl" />
           <form

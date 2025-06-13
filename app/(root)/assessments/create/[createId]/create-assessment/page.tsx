@@ -1,14 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type Criterion = {
   criterion: string;
@@ -38,6 +39,7 @@ type Question = {
 
 const CreateAssessment = () => {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([
     {
       questionNumber: "",
@@ -477,12 +479,42 @@ const CreateAssessment = () => {
             >
               Add New Question
             </Button>
-            <Button className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10">
-              Continue
+            <Button
+              className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+              onClick={() => setIsOpen(true)}
+            >
+              {questions.length > 1 ? "Finish" : "Continue"}
             </Button>
           </div>
         </div>
       </div>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="shadow-md flex flex-col justify-center items-center gap-4 p-5 w-[357px]  !rounded-[20px] border-none">
+          <Image
+            src="/images/error-warning.svg"
+            alt="warning"
+            width={40}
+            height={40}
+          />
+          <div className="flex flex-col gap-1 text-center">
+            <h5 className="text-[#171717] lg:text-base text-sm font-semibold">
+              Your answer may need review
+            </h5>
+            <p className="text-[#8C8C8C] lg:text-sm text-xs">
+              It looks like there may be an issue with your answers. Kindly
+              double-check
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-[13px] text-xs tracking-[1.5%] !hover:bg-primary hover:bg-[#f5f7ffc6] rounded-[10px] lg:font-semibold font-medium !text-[13px]">
+              Continue anyway
+            </Button>
+            <Button className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 !text-[13px]">
+              Review answers
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
