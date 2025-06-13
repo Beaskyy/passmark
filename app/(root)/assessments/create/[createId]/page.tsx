@@ -104,7 +104,7 @@ const AddQuestion = ({ params }: { params: { createId: string } }) => {
                     />
                   </div>
                   <Link
-                    href={`/assessments/create/${createId}/questions`}
+                    href={`/assessments/create/${createId}/create-assessment`}
                     className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden cursor-pointer"
                   >
                     <div className="flex flex-col gap-1">
