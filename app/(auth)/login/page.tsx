@@ -57,9 +57,7 @@ const Login = () => {
       Cookies.set("access_token", data.access, { expires: 1 / 24 });
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Login successful");
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
+      window.location.href = "/";
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong. Please try again.");
