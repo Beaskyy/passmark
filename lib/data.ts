@@ -35,7 +35,7 @@ export const markedScriptsData = [
     studentId: 34324,
     courseCode: "CSC 343",
     dateMarked: "Feb 21, 2023 at 03:05 pm",
-    status: "Pending",
+    status: "Requires attention",
     actions: ["View Script", "Approve"],
   },
   {
