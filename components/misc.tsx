@@ -18,7 +18,7 @@ export const Misc = () => {
                 Upload Script
               </h2>
               <p className="text-[#5C5C5C] lg:text-sm text-xs">
-                Upload your student's answer script/sheet
+                Upload your student&apos;s answer script/sheet
               </p>
             </div>
             <div className="flex flex-col justify-center items-center gap-11">
