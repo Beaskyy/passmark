@@ -3,30 +3,28 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { MarkedScript } from "@/lib/data";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const columns: ColumnDef<MarkedScript>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="flex items-center  !border-[#E1E4EA] rounded">
-        <input
-          type="checkbox"
+      <div className="flex items-center">
+        <Checkbox
           checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-          className="w-4 h-4 border border-[#E1E4EA] rounded cursor-pointer shadow-sm"
+          onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+          aria-label="Select all"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
         />
       </div>
     ),
     cell: ({ row }) => (
-      <div
-        className="flex items-center  !border-[#E1E4EA] rounded"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <input
-          type="checkbox"
+      <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+        <Checkbox
           checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-          className="w-4 h-4  !border-[#dd263b] rounded cursor-pointer"
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
         />
       </div>
     ),
@@ -146,12 +144,14 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-[88px] h-6 p-1 pr-2 rounded-md">
+      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md whitespace-nowrap">
         <Image
           src={`/images/${
             row.original?.status?.toLocaleLowerCase() === "approved"
               ? "check"
-              : "alert"
+              : row.original?.status?.toLocaleLowerCase() === "pending"
+              ? "alert"
+              : "error"
           }.svg`}
           alt="check"
           width={16}
