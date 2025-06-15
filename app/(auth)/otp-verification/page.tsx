@@ -116,14 +116,14 @@ const OTPVerification = () => {
                 <div className="flex flex-col gap-4">
                   <Button
                     type="submit"
-                    className="rounded-full font-geist"
+                    className="rounded-full"
                     disabled={isVerifyingOTP}
                   >
                     {isVerifyingOTP ? "Verifying..." : "Verify OTP"}
                   </Button>
                 </div>
                 <div className="flex justify-center items-cener">
-                  <p className="lg:text-sm text-xs text-[#4B5563] font-geist">
+                  <p className="lg:text-sm text-xs text-[#4B5563]">
                     Didn&apos;t receive the code?{" "}
                     <span className="text-[#335CFF] font-semibold">
                       <Link href="/recover-password">Resend</Link>

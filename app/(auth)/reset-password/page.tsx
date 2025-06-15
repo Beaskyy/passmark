@@ -133,7 +133,7 @@ const ResetPassword = () => {
               </div>
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                  <Button type="submit" className="rounded-full font-geist" disabled={loading}>
+                  <Button type="submit" className="rounded-full" disabled={loading}>
                     Continue
                   </Button>
                 </div>

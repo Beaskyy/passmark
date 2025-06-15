@@ -54,7 +54,7 @@ const Login = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      Cookies.set("access_token", data.access, { expires: 1 / 24 });
+      Cookies.set("access_token", data.access, { expires: 7 });
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Login successful");
       window.location.href = "/";
@@ -170,7 +170,7 @@ const Login = () => {
               <div className="flex flex-col gap-4">
                 <Button
                   type="submit"
-                  className="rounded-full font-geist"
+                  className="rounded-full"
                   disabled={isLoggingIn}
                 >
                   Continue
@@ -214,7 +214,7 @@ const Login = () => {
                 )}
               </div>
               <div className="flex justify-center items-cener">
-                <p className="lg:text-sm text-xs text-[#4B5563] font-geist">
+                <p className="lg:text-sm text-xs text-[#4B5563]">
                   Don&apos;t have an account?{" "}
                   <span className="text-[#335CFF] font-semibold">
                     <Link href="/sign-up">Sign up</Link>

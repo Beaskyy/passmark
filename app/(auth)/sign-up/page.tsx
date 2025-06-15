@@ -327,7 +327,7 @@ const SignUp = () => {
                 <div className="flex flex-col gap-4">
                   <Button
                     type="submit"
-                    className="rounded-full font-geist"
+                    className="rounded-full"
                     disabled={isCreatingAccount}
                   >
                     {currentStep === 1 ? "Continue" : "Create account"}
@@ -371,7 +371,7 @@ const SignUp = () => {
                   )}
                 </div>
                 <div className="flex justify-center items-cener">
-                  <p className="lg:text-sm text-xs text-[#4B5563] font-geist">
+                  <p className="lg:text-sm text-xs text-[#4B5563]">
                     Already have an account{" "}
                     <span className="text-[#335CFF] font-semibold">
                       <Link href="/login">Sign in</Link>
