@@ -32,13 +32,13 @@ export const config = {
   // Specify the routes that the middleware should apply to.
   // This implicitly excludes static assets, _next/static, _next/image, and api routes.
   matcher: [
-    "/", // Root path
-    "/my-courses/:path*", // All subpaths under my-courses
-    "/new-course/:path*", // All subpaths under new-course
-    "/profile/:path*", // All subpaths under profile
-    "/my-script/:path*", // All subpaths under my-script
-    "/marked-scripts/:path*", // All subpaths under marked-scripts
-    "/login", // Login page
-    "/sign-up", // Sign-up page
+    // "/", // Root path
+    // "/my-courses/:path*", // All subpaths under my-courses
+    // "/new-course/:path*", // All subpaths under new-course
+    // "/profile/:path*", // All subpaths under profile
+    // "/my-script/:path*", // All subpaths under my-script
+    // "/marked-scripts/:path*", // All subpaths under marked-scripts
+    // "/login", // Login page
+    // "/sign-up", // Sign-up page
   ],
 };
