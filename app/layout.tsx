@@ -3,6 +3,7 @@ import { inter, geist } from "./fonts";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Provider } from "@/components/providers/provider";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Passmark",
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${geist.variable}`}>
       <body>
-        <Provider>{children}</Provider>
+        <SessionProvider>
+          <Provider>{children}</Provider>
+        </SessionProvider>
         <Toaster richColors />
       </body>
     </html>
