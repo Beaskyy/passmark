@@ -108,8 +108,9 @@ const SignUp = () => {
     },
     onSuccess: () => {
       toast.success("Account created successfully");
+      sessionStorage.setItem("email", email)
       setTimeout(() => {
-        router.push("/");
+        router.push("/verify-email");
       }, 1000);
     },
     onError: (error: Error) => {
