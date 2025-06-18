@@ -12,6 +12,8 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
+import { signIn } from "next-auth/react";
+
 const Login = () => {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -185,7 +187,10 @@ const Login = () => {
                       <span className="flex-1 border-[0.5px] border-[#F3F4F6]"></span>
                     </div>
                     <div className="grid grid-cols-3 lg:gap-3.5 gap-2">
-                      <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
+                      <div
+                        className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
+                        onClick={() => signIn("google")}
+                      >
                         <Image
                           src="/images/google.svg"
                           alt="google"

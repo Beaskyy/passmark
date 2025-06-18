@@ -84,7 +84,7 @@ const SignUp = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setCurrentStep(1)
+        setCurrentStep(1);
         // Handle array of errors
         if (data.data) {
           const errorMessages = Object.entries(data.data)
@@ -108,7 +108,7 @@ const SignUp = () => {
     },
     onSuccess: () => {
       toast.success("Account created successfully");
-      sessionStorage.setItem("email", email)
+      sessionStorage.setItem("email", email);
       setTimeout(() => {
         router.push("/verify-email");
       }, 1000);
