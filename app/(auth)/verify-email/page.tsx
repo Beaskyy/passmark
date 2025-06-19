@@ -19,14 +19,14 @@ const OTPVerification = () => {
   const [otpError, setOtpError] = useState("");
   const [email, setEmail] = useState("");
 
-  // useEffect(() => {
-  //   const storedEmail = sessionStorage.getItem("email");
-  //   if (!storedEmail) {
-  //     router.push("/sign-up");
-  //     return;
-  //   }
-  //   setEmail(storedEmail);
-  // }, [router]);
+  useEffect(() => {
+    const storedEmail = sessionStorage.getItem("email");
+    if (!storedEmail) {
+      router.push("/sign-up");
+      return;
+    }
+    setEmail(storedEmail);
+  }, [router]);
 
   const validateOTP = (value: string) => {
     if (!value) return "OTP is required";
@@ -60,7 +60,7 @@ const OTPVerification = () => {
     },
     onSuccess: () => {
       toast.success("OTP verified successfully");
-      router.push("/reset-password");
+      // router.push("/reset-password");
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong. Please try again.");
