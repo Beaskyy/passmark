@@ -38,7 +38,7 @@ const OTPVerification = () => {
   const { mutate: verifyOTP, isPending: isVerifyingOTP } = useMutation({
     mutationFn: async ({ value }: { value: string }) => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/account/verify-email`,
+        `${process.env.NEXT_PUBLIC_API_URL}/account/verify-email/`,
         {
           method: "POST",
           headers: {
