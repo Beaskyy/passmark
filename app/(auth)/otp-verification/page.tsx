@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import VerificationInput from "react-verification-input";
 
 const OTPVerification = () => {
   const router = useRouter();
@@ -95,17 +96,29 @@ const OTPVerification = () => {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="otp">OTP</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter 5-digit OTP"
-                    className="w-full"
-                    value={otp}
-                    onChange={(e) => {
-                      setOtp(e.target.value);
-                      setOtpError("");
+                  <Label className="text-[#374151]">OTP Code</Label>
+                  <VerificationInput
+                    onComplete={(value) => {
+                      setOtp(value);
+                      // Auto-submit when complete
+                      const otpErr = validateOTP(value);
+                      setOtpError(otpErr);
+                      if (!otpErr) {
+                        verifyOTP({ otp: value });
+                      }
                     }}
-                    maxLength={5}
+                    value={otp}
+                    onChange={(value) => setOtp(value)}
+                    length={5}
+                    placeholder=""
+                    validChars="0-9"
+                    classNames={{
+                      character:
+                        "flex justify-center items-center md:h-[52px] h-7 md:min-w-[62.8px] max-w-8 border border-[#F0F0F0] md:rounded-[32px] rounded-[16px] md:text-[20px] text-xs text-[#181415] font-normal",
+                      characterInactive: "bg-white",
+                      characterSelected: "bg-white text-[#171717]",
+                      characterFilled: "bg-white text-[#171717]",
+                    }}
                   />
                   {otpError && (
                     <p className="text-sm text-red-500">{otpError}</p>
