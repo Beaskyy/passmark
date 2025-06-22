@@ -91,8 +91,11 @@ const handler = NextAuth({
         );
         if (response.ok) {
           const data = await response.json();
-          token.accessToken = data.access;
-          token.user = data.user;
+          token.accessToken = data.data.access;
+          token.user = data.data.user;
+        } else {
+          token.accessToken = undefined;
+          token.user = undefined;
         }
       }
 

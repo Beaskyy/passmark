@@ -45,7 +45,6 @@ const Login = () => {
       return;
     }
 
-    // Step 2: validate password and sign in
     const passwordErr = validatePassword(password);
     setPasswordError(passwordErr);
     if (!passwordErr) {

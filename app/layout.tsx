@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Provider } from "@/providers/provider";
 import { SessionProvider } from "@/providers/SessionProvider";
+import { AccountProvider } from "@/providers/AccountProvider";
 
 export const metadata: Metadata = {
   title: "Passmark",
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${geist.variable}`}>
       <body>
         <SessionProvider>
-          <Provider>{children}</Provider>
+          <Provider>
+            <AccountProvider>{children}</AccountProvider>
+          </Provider>
         </SessionProvider>
         <Toaster richColors />
       </body>
