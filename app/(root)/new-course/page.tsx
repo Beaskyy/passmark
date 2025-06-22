@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { useAccount } from "@/providers/AccountProvider";
 
 const formSchema = z.object({
   title: z.string().min(3, {
@@ -47,6 +48,8 @@ const formSchema = z.object({
 const NewCourse = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { user } = useAccount();
+  console.log(user, "besky");
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,6 +64,10 @@ const NewCourse = () => {
 
   const { mutate: createCourse, isPending } = useMutation({
     mutationFn: async (payload: z.infer<typeof formSchema>) => {
+      const fullPayload = {
+        ...payload,
+        organisation_id: user?.organisation?.org_id,
+      };
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/main/course/update/`,
         {
@@ -69,7 +76,7 @@ const NewCourse = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.accessToken}`,
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(fullPayload),
         }
       );
       if (!response.ok) {

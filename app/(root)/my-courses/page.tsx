@@ -32,7 +32,7 @@ const MyCourses = () => {
               ({ code, id, title, year, yearColor, bgColor, pillBg }) => (
                 <div
                   key={id}
-                  className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden cursor-pointer"
+                  className="relative py-[22px] px-[18px] rounded-[14px] minh-[85px] shadow-sm bg-white overflow-hidden cursor-pointer"
                   onClick={() => router.push(`/my-courses/${id}`)}
                 >
                   <div className="flex flex-col gap-1">

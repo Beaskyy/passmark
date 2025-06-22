@@ -71,14 +71,20 @@ export const Header = () => {
             height={40}
           />
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-9 pl-1 pt-[3px] pr-2 border border-[#EBEBEB] rounded-[22px]">
-              <div className="flex justify-center items-center">
-                <Image
-                  src="/images/profile.svg"
-                  alt="profile"
-                  width={32}
-                  height={32}
-                />
+            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-10 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+              <div className="flex justify-center items-center gap-2">
+                <div className="relative flex justify-center items-center w-8 h-8 rounded-full">
+                  <Image
+                    src={
+                      session?.user?.image
+                        ? session?.user?.image
+                        : "/images/profile.svg"
+                    }
+                    alt="profile"
+                    fill
+                    className="absolute rounded-full object-contain"
+                  />
+                </div>
                 <p className="text-sm font-medium tracking-[-0.6%]">
                   {session?.user?.name || "User"}
                 </p>
