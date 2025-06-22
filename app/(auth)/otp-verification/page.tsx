@@ -36,7 +36,7 @@ const OTPVerification = () => {
   const { mutate: verifyOTP, isPending: isVerifyingOTP } = useMutation({
     mutationFn: async ({ otp }: { otp: string }) => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/account/verify-otp`,
+        `${process.env.NEXT_PUBLIC_API_URL}/account/verify-otp/`,
         {
           method: "POST",
           headers: {
@@ -52,7 +52,7 @@ const OTPVerification = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to verify OTP");
+        throw new Error(errorData.message || "Failed to verify OTP");
       }
 
       return response.json();
@@ -77,8 +77,8 @@ const OTPVerification = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-[1440px] bg-[#F9FAFB] min-h-screen">
-      <div className="flex lg:flex-row flex-col gap-12 justify-center items-center lg:pt-[169px] py-10 lg:px-[96px]">
+    <div className="flex min-h-screen justify-center items-center bg-[#F9FAFB]">
+      <div className="w-full max-w-[1440px] flex flex-col items-center">
         <div className="flex flex-col gap-4">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(59.66%_49.84%_at_44.77%_47.75%,rgba(27,152,193,0.3)_0%,rgba(157,174,240,0.3)_100%)] rounded-full blur-3xl" />
           <form

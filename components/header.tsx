@@ -13,14 +13,25 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Navigation } from "./navigation";
-import { logout } from "@/lib/auth";
+import { signOut, useSession } from "next-auth/react";
 
 export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const handleLogout = () => {
-    logout(router);
+  const handleLogout = async () => {
+    try {
+      await signOut({
+        redirect: false,
+      });
+      console.log("Logout successful, redirecting to login");
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Fallback: force redirect to login
+      router.push("/login");
+    }
   };
 
   return (
@@ -68,7 +79,9 @@ export const Header = () => {
                   width={32}
                   height={32}
                 />
-                <p className="text-sm font-medium tracking-[-0.6%]">Chris</p>
+                <p className="text-sm font-medium tracking-[-0.6%]">
+                  {session?.user?.name || "User"}
+                </p>
               </div>
               <Image
                 src="/images/caret.svg"

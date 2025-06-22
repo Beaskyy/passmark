@@ -2,6 +2,7 @@
 
 import { useMedia } from "react-use";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -11,7 +12,6 @@ import Link from "next/link";
 import { links } from "@/lib/data";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { logout } from "@/lib/auth";
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +27,7 @@ export const Navigation = () => {
   };
 
   const handleLogout = () => {
-    logout(router);
+    signOut({ callbackUrl: "/login" });
   };
 
   if (isMobile) {
