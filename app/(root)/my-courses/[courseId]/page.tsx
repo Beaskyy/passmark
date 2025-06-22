@@ -30,7 +30,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
         </div>
         <div className="flex items-center gap-[14px]">
           <Link
-            href={"/new-course"}
+            href={"/assessments/create"}
             className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
                 "
           >
@@ -47,7 +47,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
             {assessments?.map(({ id, title, year, yearColor, pillBg }) => (
               <div
                 key={id}
-                className="relative py-[22px] px-[18px] rounded-[14px] h-[57px] shadow-sm bg-white overflow-hidden cursor-pointer"
+                className="relative py-[22px] px-[18px] rounded-[14px] min-h-[57px] shadow-sm hover:shadow-md bg-white overflow-hidden cursor-pointer"
                 onClick={() => router.push(`/my-courses/${courseId}/${id}`)}
               >
                 <div className="flex justify-between items-center gap-1">
