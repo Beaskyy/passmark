@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { inter, geist } from "./fonts";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { Provider } from "@/components/providers/provider";
-import { SessionProvider } from "@/components/providers/SessionProvider";
+import { Provider } from "@/providers/provider";
+import { SessionProvider } from "@/providers/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Passmark",

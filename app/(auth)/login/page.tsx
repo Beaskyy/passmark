@@ -9,9 +9,6 @@ import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import Cookies from "js-cookie";
-
 import { signIn } from "next-auth/react";
 
 const Login = () => {
@@ -22,6 +19,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -35,37 +33,6 @@ const Login = () => {
     return "";
   };
 
-  const { mutate: login, isPending: isLoggingIn } = useMutation({
-    mutationFn: async ({ email, password }: any) => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/account/auth/login/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Login failed");
-      }
-
-      return response.json();
-    },
-    onSuccess: (data) => {
-      Cookies.set("access_token", data.access, { expires: 7 });
-      localStorage.setItem("user", JSON.stringify(data.user));
-      toast.success("Login successful");
-      window.location.href = "/";
-    },
-    onError: (error) => {
-      toast.error(error.message || "Something went wrong. Please try again.");
-    },
-  });
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -77,14 +44,29 @@ const Login = () => {
       }
       return;
     }
-    // Step 2: validate password
+
+    // Step 2: validate password and sign in
     const passwordErr = validatePassword(password);
     setPasswordError(passwordErr);
     if (!passwordErr) {
+      setIsLoggingIn(true);
       try {
-        await login({ email, password });
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          toast.error("Invalid email or password");
+        } else {
+          toast.success("Login successful");
+          router.push("/");
+        }
       } catch (error) {
-        console.error("Login mutation error: ", error);
+        toast.error("Something went wrong. Please try again.");
+      } finally {
+        setIsLoggingIn(false);
       }
     }
   };
