@@ -11,22 +11,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeleteCourse } from "@/hooks/useDeleteCourse";
+import { useFetchCourseDetails } from "@/hooks/useFetchCourseDetails";
 import { assessments, coursesData } from "@/lib/courses";
-import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import CourseDetailsSkeleton from "@/components/skeletons/CourseDetailsSkeleton";
+import { useSession } from "next-auth/react";
 
 const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
   const router = useRouter();
   const { mutate: deleteCourse, isPending } = useDeleteCourse();
+  const { status } = useSession();
 
   const handleDelete = (course_id: string) => {
     deleteCourse({ course_id });
   };
-
+  const {
+    data: courseDetails,
+    isLoading,
+    isError,
+    error,
+  } = useFetchCourseDetails(courseId);
+  if (status === "loading" || isLoading) return <CourseDetailsSkeleton />;
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
+  if (isError) return <div>Error - {error.message}</div>;
+  const { code, description } = courseDetails!;
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex lg:flex-row flex-col justify-between lg:items-center gap-7">
@@ -36,11 +51,9 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           </Link>
           <div className="flex flex-col gap-1">
             <h4 className="text-black lg:text-[17px] text-sm lg:font-semibold font-medium">
-              BSE 101
+              {code}
             </h4>
-            <p className="text-[#939393] lg:text-base text-sm">
-              Introduction to Business Education
-            </p>
+            <p className="text-[#939393] lg:text-base text-sm">{description}</p>
           </div>
         </div>
         <div className="flex items-center gap-[14px]">
@@ -74,7 +87,10 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleDelete(courseId)} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={() => handleDelete(courseId)}
+                className="cursor-pointer"
+              >
                 <span className="text-sm font-medium text-[#F11B1B]">
                   Delete Course
                 </span>
@@ -116,7 +132,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
         <EmptyState
           image="/images/empty-state.svg"
           title="No Assessment"
-          desc="You’ve not added any assessment yet"
+          desc="You've not added any assessment yet"
           link="/assessment"
           buttonText="Create Assessment"
           showIcon={false}

@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFetchCourses } from "@/hooks/useFetchCourses";
 import MyCoursesSkeleton from "@/components/skeletons/MyCoursesSkeleton";
+import { useSession } from "next-auth/react";
 
 const colorSchemes = [
   {
@@ -45,12 +46,27 @@ const colorSchemes = [
 const MyCourses = () => {
   const router = useRouter();
   const { data: courses, isLoading, isError, error } = useFetchCourses();
-  if (isLoading) return <MyCoursesSkeleton />;
+  const { status } = useSession();
+
+  if (status === "loading" || isLoading) return <MyCoursesSkeleton />;
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
   if (isError) return <p>Error fetching senders: {error.message}</p>;
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
-      {courses ? (
+      {courses && courses.length === 0 ? (
+        <EmptyState
+          image="/images/corrupt-file.svg"
+          title="My Courses"
+          desc="No courses available, Kindly add one to get started"
+          link="/new-course"
+          buttonText="Create New Course"
+          showIcon={true}
+        />
+      ) : (
         <div className="flex flex-col gap-[27px]">
           <div className="flex flex-col gap-[27px]">
             <Link href="/">
@@ -66,7 +82,7 @@ const MyCourses = () => {
             </div>
           </div>
           <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px]">
-            {courses.map(({ code,course_id, title, session }, idx) => {
+            {courses?.map(({ code, course_id, title, session }, idx) => {
               const color = colorSchemes[idx % colorSchemes.length];
               return (
                 <div
@@ -109,15 +125,6 @@ const MyCourses = () => {
             <span>Create New Course</span>
           </Link>
         </div>
-      ) : (
-        <EmptyState
-          image="/images/corrupt-file.svg"
-          title="My Courses"
-          desc="No courses available, Kindly add one to get started"
-          link="/new-course"
-          buttonText="Create New Course"
-          showIcon={true}
-        />
       )}
     </div>
   );

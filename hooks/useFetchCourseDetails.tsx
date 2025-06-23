@@ -1,6 +1,7 @@
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { useAccount } from "@/providers/AccountProvider";
 
 type Course = {
   title: string;
@@ -9,15 +10,14 @@ type Course = {
   description?: string;
   course_id: string;
   organisation_id: string;
-  department_id: null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
 };
 
-const getCourses = async (token: string, orgId: string): Promise<Course[]> => {
+const getCourseDetails = async (
+  token: string,
+  courseId: string
+): Promise<Course> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/course/list/${orgId}/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/course/get/${courseId}/`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -25,25 +25,22 @@ const getCourses = async (token: string, orgId: string): Promise<Course[]> => {
     }
   );
   if (!response.ok) {
-    throw new Error("Failed to fetch courses");
+    throw new Error("Failed to fetch course details");
   }
   const result = await response.json();
   return result.data;
 };
 
-export const useFetchCourses = () => {
+export const useFetchCourseDetails = (courseId: string) => {
   const { data: session, status } = useSession();
-  const { user } = useAccount();
   const token = session?.accessToken;
-  const orgId = user?.organisation?.org_id;
 
   return useQuery({
-    queryKey: ["courses", orgId],
+    queryKey: ["course", courseId],
     queryFn: () => {
       if (!token) throw new Error("No access token");
-      if (!orgId) throw new Error("No organisation ID");
-      return getCourses(token, orgId);
+      return getCourseDetails(token, courseId);
     },
-    enabled: status !== "loading" && !!token && !!orgId,
+    enabled: status !== "loading" && !!token && !!courseId,
   });
 };
