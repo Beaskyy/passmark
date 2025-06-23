@@ -9,7 +9,7 @@ const deleteCourse = async (token: string, payload: DeleteCoursePayload) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/course/delete/`,
     {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
