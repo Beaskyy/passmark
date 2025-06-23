@@ -19,15 +19,30 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import CourseDetailsSkeleton from "@/components/skeletons/CourseDetailsSkeleton";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { mutate: deleteCourse, isPending } = useDeleteCourse();
   const { status } = useSession();
 
   const handleDelete = (course_id: string) => {
-    deleteCourse({ course_id });
+    deleteCourse(
+      { course_id },
+      {
+        onSuccess: (data) => {
+          toast.success(data.message || "Course deleted successfully");
+          queryClient.invalidateQueries({ queryKey: ["courses"] });
+          router.replace("/my-courses");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to delete course");
+        },
+      }
+    );
   };
   const {
     data: courseDetails,
