@@ -2,6 +2,15 @@
 
 import EmptyState from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useDeleteCourse } from "@/hooks/useDeleteCourse";
 import { assessments, coursesData } from "@/lib/courses";
 import { Plus } from "lucide-react";
 import Image from "next/image";
@@ -12,6 +21,12 @@ import React from "react";
 const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
   const router = useRouter();
+  const { mutate: deleteCourse, isPending } = useDeleteCourse();
+
+  const handleDelete = (course_id: string) => {
+    deleteCourse({ course_id });
+  };
+
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex lg:flex-row flex-col justify-between lg:items-center gap-7">
@@ -36,9 +51,36 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           >
             <span>Create Assessment</span>
           </Link>
-          <Button className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] hover:text-[#F5F7FF] hover:bg-primary rounded-[10px] lg:font-semibold font-medium">
-            More Options
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium w-[122px] hover:bg-[#F0F3FF] hover:text-primary">
+              More Options
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[183px] py-3">
+              <DropdownMenuLabel
+                onClick={() => router.push("/profile")}
+                className="cursor-pointer"
+              >
+                <span className="lg:text-sm text-xs font-medium text-[#333333]">
+                  Edit Course Information
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel
+                onClick={() => router.push("/profile")}
+                className="cursor-pointer"
+              >
+                <span className="lg:text-sm text-xs font-medium text-[#333333]">
+                  Edit Student
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleDelete(courseId)} className="cursor-pointer">
+                <span className="text-sm font-medium text-[#F11B1B]">
+                  Delete Course
+                </span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       {assessments ? (
