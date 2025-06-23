@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAccount } from "@/providers/AccountProvider";
 import { Eye, EyeClosed } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
 const Profile = () => {
-  const [email, setEmail] = useState("");
+  const { user } = useAccount();
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -86,10 +87,10 @@ const Profile = () => {
               />
               <div className="flex flex-col">
                 <h5 className="text-[#171717] lg:text-base text-sm font-semibold">
-                  George Christopher
+                  {user?.firstname} {user?.lastname}
                 </h5>
                 <p className="text-[#737373] lg:text-sm text-xs">
-                  waleshogo@yahoo.co.uk
+                  {user?.email}
                 </p>
               </div>
             </div>
