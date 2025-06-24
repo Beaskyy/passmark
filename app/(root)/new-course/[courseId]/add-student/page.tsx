@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 
@@ -12,6 +12,7 @@ const MyScript = () => {
   const router = useRouter();
   const [showAddBulk, setShowAddBulk] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const { courseId } = useParams();
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -85,7 +86,7 @@ const MyScript = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-4">
-                    <div className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden">
+                    <div className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300" onClick={() => router.push(`/new-course/${courseId}/new-student`)}>
                       <div className="flex flex-col gap-1">
                         <h4 className="text-[15px] text-sm text-[#474545] font-semibold">
                           Add Manually
@@ -103,7 +104,7 @@ const MyScript = () => {
                       />
                     </div>
                     <div
-                      className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white cursor-pointer hover:opacity-95 overflow-hidden"
+                      className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white cursor-pointer hover:shadow-md transition-all duration-300 overflow-hidden"
                       onClick={() => setShowAddBulk(true)}
                     >
                       <div className="flex flex-col gap-1">
@@ -141,7 +142,7 @@ const MyScript = () => {
             <div className="flex justify-center items-center">
               <Button
                 className="mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF]"
-                onClick={() => router.push("/new-student")}
+                onClick={() => router.push("/my-courses")}
               >
                 Skip
               </Button>

@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash, Trash2 } from "lucide-react";
+import { useParams } from "next/navigation";
 
 const NewStudent = () => {
   const [students, setStudents] = useState([{ id: "", name: "" }]);
+  const { courseId } = useParams();
 
   const addStudent = () => {
     setStudents([...students, { id: "", name: "" }]);
@@ -44,7 +46,7 @@ const NewStudent = () => {
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
         <div className="flex items-center gap-3 mt-2">
-          <Link href="/">
+          <Link href={`/new-course/${courseId}/add-student`}>
             <Image src="/images/back.svg" alt="back" width={44} height={44} />
           </Link>
           <h3 className="text-black font-semibold lg:text-[17px] text-sm">

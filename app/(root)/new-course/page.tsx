@@ -48,7 +48,6 @@ const NewCourse = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const { user } = useAccount();
-  console.log(user, "besky");
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -86,8 +85,9 @@ const NewCourse = () => {
     },
     onSuccess: (response) => {
       console.log(response, "this is the response");
+      console.log(response.data.course_id, "this is the response");
       toast.success("Course created successfully!");
-      router.push("/my-courses");
+      router.push(`/new-course/${response.data.course_id}/add-student`);
     },
     onError: (error: any) => {
       toast.error(error.detail || "Something went wrong.");
