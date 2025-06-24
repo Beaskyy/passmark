@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useCreateStudent } from "@/hooks/useCreateStudent";
+import { useDeleteStudent } from "@/hooks/useDeleteStudent";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +25,7 @@ import { useAccount } from "@/providers/AccountProvider";
 type Student = {
   id: string;
   name: string;
+  student_id?: string; // The server-generated ID after creation
   error?: {
     id?: string;
     name?: string;
@@ -39,6 +41,7 @@ const NewStudent = () => {
   const { user } = useAccount();
   const router = useRouter();
   const createStudent = useCreateStudent();
+  const deleteStudent = useDeleteStudent();
 
   const validateStudent = (student: Student): boolean => {
     const newError: { id?: string; name?: string } = {};
@@ -77,17 +80,27 @@ const NewStudent = () => {
     setIsSubmitting(true);
     try {
       // Create the student
-      await createStudent.mutateAsync({
+      const response = await createStudent.mutateAsync({
         course_id: courseId as string,
         student_number: lastStudent.id,
         full_name: lastStudent.name,
       });
 
+      console.log("Student created with response:", response);
+
+      // Update the last student with their server-generated ID
+      const newStudents = [...students];
+      newStudents[newStudents.length - 1] = {
+        ...lastStudent,
+        student_id: response.data?.student_id || response.student_id, // Handle both response formats
+      };
+
       toast.success("Student added successfully");
 
       // Add a new empty student form
-      setStudents([...students, { id: "", name: "", error: {} }]);
+      setStudents([...newStudents, { id: "", name: "", error: {} }]);
     } catch (error) {
+      console.error("Error creating student:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to add student"
       );
@@ -96,10 +109,38 @@ const NewStudent = () => {
     }
   };
 
-  const removeStudent = (index: number) => {
-    if (students.length > 1) {
+  const removeStudent = async (index: number) => {
+    const student = students[index];
+    console.log("Attempting to remove student:", student);
+
+    try {
+      // If the student has a student_id (means they were saved to the server)
+      if (student.student_id) {
+        console.log(
+          "Calling delete endpoint for student_id:",
+          student.student_id
+        );
+        await deleteStudent.mutateAsync({
+          student_id: student.student_id,
+        });
+        console.log("Successfully deleted student from server");
+        toast.success("Student deleted successfully");
+      } else {
+        console.log("Student was not saved to server, only removing from list");
+      }
+
+      // Remove from the list
       const newStudents = students.filter((_, i) => i !== index);
+      if (newStudents.length === 0) {
+        // If no students left, add an empty form
+        newStudents.push({ id: "", name: "", error: {} });
+      }
       setStudents(newStudents);
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete student"
+      );
     }
   };
 
@@ -120,8 +161,35 @@ const NewStudent = () => {
     setStudents(newStudents);
   };
 
-  const handleSubmit = () => {
-    router.push(`/new-course/${courseId}/add-student`);
+  const handleSubmit = async () => {
+    const lastStudent = students[students.length - 1];
+    // If the last student is filled and not yet added (no student_id)
+    if (
+      lastStudent.id.trim() &&
+      lastStudent.name.trim() &&
+      !lastStudent.student_id
+    ) {
+      setIsSubmitting(true);
+      try {
+        const response = await createStudent.mutateAsync({
+          course_id: courseId as string,
+          student_number: lastStudent.id,
+          full_name: lastStudent.name,
+        });
+        // Optionally update the student_id in state (not strictly needed since we're redirecting)
+        // Redirect after successful add
+        router.push(`/my-courses/${courseId}`);
+        return;
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to add student"
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    // Otherwise, just redirect
+    router.push(`/my-courses/${courseId}`);
   };
 
   return (
@@ -135,7 +203,7 @@ const NewStudent = () => {
             Add my Student
           </h3>
         </div>
-        {isSubmitting ? (
+        {isSubmitting || deleteStudent.isPending ? (
           <Image
             src="/images/spinner.svg"
             alt="spinner"
