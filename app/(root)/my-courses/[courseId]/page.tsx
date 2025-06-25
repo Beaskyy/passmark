@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useFetchAssessmentList } from "@/hooks/useFetchAssessmentList";
 
 const formSchema = z.object({
   title: z.string().min(1, "Course name is required"),
@@ -51,6 +52,22 @@ const formSchema = z.object({
   session: z.string().min(1, "Session is required"),
   description: z.string().optional(),
 });
+
+const getAssessmentTypeColors = (type: string) => {
+  switch (type.toLowerCase()) {
+    case "examination":
+      return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
+    case "test":
+      return { yearColor: "#FA7319", pillBg: "#FFF3EB" };
+    case "assignment":
+      return { yearColor: "#1FC16B", pillBg: "#E0FAEC" };
+    case "custom":
+    case "other":
+      return { yearColor: "#7D52F4", pillBg: "#EFEBFF" };
+    default:
+      return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
+  }
+};
 
 const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
@@ -83,6 +100,13 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     isError,
     error,
   } = useFetchCourseDetails(courseId);
+
+  const {
+    data: assessmentList,
+    isLoading: isAssessmentLoading,
+    isError: isAssessmentError,
+    error: assessmentError,
+  } = useFetchAssessmentList(courseId);
 
   // Setup form with default values from courseDetails
   const form = useForm({
@@ -130,7 +154,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     );
   };
 
-  console.log(courseDetails, "beasky");
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex lg:flex-row flex-col justify-between lg:items-center gap-7">
@@ -312,36 +335,52 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           </div>
         ) : (
           <>
-            {assessments ? (
+            {isAssessmentLoading ? (
+              <CourseDetailsSkeleton />
+            ) : isAssessmentError ? (
+              <div>Error - {assessmentError.message}</div>
+            ) : assessmentList && assessmentList.length > 0 ? (
               <div className="flex flex-col gap-[27px]">
                 <div className="mt-10 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px]">
-                  {assessments?.map(
-                    ({ id, title, year, yearColor, pillBg }) => (
-                      <div
-                        key={id}
-                        className="relative py-[22px] px-[18px] rounded-[14px] min-h-[57px] shadow-sm hover:shadow-md bg-white overflow-hidden cursor-pointer"
-                        onClick={() =>
-                          router.push(`/my-courses/${courseId}/${id}`)
-                        }
-                      >
-                        <div className="flex justify-between items-center gap-1">
-                          <h4 className="lg:text-[15px] text-xs text-[#474545] lg:font-semibold font-medium">
-                            {title}
-                          </h4>
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className="h-5 py-0.5 px-2 text-xs font-medium rounded-lg w-fit"
-                              style={{
-                                backgroundColor: pillBg,
-                                color: yearColor,
-                              }}
-                            >
-                              {year}
+                  {assessmentList.map(
+                    ({ assessment_id, title, description }) => {
+                      // Determine type from title or description
+                      let type = "other";
+                      if (/exam/i.test(title)) type = "examination";
+                      else if (/test/i.test(title)) type = "test";
+                      else if (/assign/i.test(title)) type = "assignment";
+                      else if (/custom|other/i.test(title)) type = "custom";
+                      const { yearColor, pillBg } =
+                        getAssessmentTypeColors(type);
+                      return (
+                        <div
+                          key={assessment_id}
+                          className="relative py-[22px] px-[18px] rounded-[14px] min-h-[57px] shadow-sm hover:shadow-md bg-white overflow-hidden cursor-pointer"
+                          onClick={() =>
+                            router.push(
+                              `/my-courses/${courseId}/${assessment_id}`
+                            )
+                          }
+                        >
+                          <div className="flex justify-between items-center gap-1">
+                            <h4 className="lg:text-[15px] text-xs text-[#474545] lg:font-semibold font-medium">
+                              {description}
+                            </h4>
+                            <div className="flex items-center gap-1.5">
+                              <div
+                                className="h-5 py-0.5 px-2 text-xs font-medium rounded-lg w-fit"
+                                style={{
+                                  backgroundColor: pillBg,
+                                  color: yearColor,
+                                }}
+                              >
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )
+                      );
+                    }
                   )}
                 </div>
               </div>
