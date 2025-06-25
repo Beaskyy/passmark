@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useCreateQuestion } from "@/hooks/useCreateQuestion";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -35,11 +36,14 @@ type Question = {
   bonuses: Bonus[];
   showPenalties: boolean;
   showBonuses: boolean;
+  question_id?: string;
+  isCreated?: boolean;
 };
 
 const CreateAssessment = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [useAI, setUseAI] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([
     {
       questionNumber: "",
@@ -53,8 +57,46 @@ const CreateAssessment = () => {
       showBonuses: false,
     },
   ]);
+  const createQuestion = useCreateQuestion();
 
-  const addNewQuestion = () => {
+  const handleCreateQuestion = async (question: Question, index: number) => {
+    if (
+      !question.isCreated &&
+      question.questionNumber.trim() &&
+      question.totalMark.trim() &&
+      question.question.trim() &&
+      question.answer.trim()
+    ) {
+      try {
+        const course_id = "59a9aba8-fdc0-44ea-bc18-e4f86bade9e1";
+        const assessment_id = "3f07ce95-85b2-45b2-b694-8542b1e40690";
+        const payload = {
+          course_id,
+          assessment_id,
+          number: question.questionNumber,
+          text: question.question,
+          total_marks: Number(question.totalMark),
+          by_ai: useAI,
+        };
+        const response = await createQuestion.mutateAsync(payload);
+        const newQuestions = [...questions];
+        newQuestions[index] = {
+          ...question,
+          isCreated: true,
+          question_id: response.data?.question_id || response.question_id,
+        };
+        setQuestions(newQuestions);
+      } catch (error) {
+        // Optionally show error toast
+      }
+    }
+  };
+
+  const addNewQuestion = async () => {
+    await handleCreateQuestion(
+      questions[questions.length - 1],
+      questions.length - 1
+    );
     setQuestions([
       ...questions,
       {
@@ -69,6 +111,14 @@ const CreateAssessment = () => {
         showBonuses: false,
       },
     ]);
+  };
+
+  const handleContinue = async () => {
+    await handleCreateQuestion(
+      questions[questions.length - 1],
+      questions.length - 1
+    );
+    setIsOpen(true);
   };
 
   const updateQuestion = <K extends keyof Question>(
@@ -191,11 +241,12 @@ const CreateAssessment = () => {
         />
       </div>
       <div className="flex flex-col gap-11 mt-7">
-        <p className="text-[#B3B3B3] lg:text-[22px] text-lg lg:font-medium">
-          Type assessment name here...
-        </p>
+        <Input
+          className="placeholder:text-[#B3B3B3] min-h-[22px] text-black text-[22px] lg:font-medium !border-none !shadow-none"
+          placeholder="Type assessment name here..."
+        />
         <div className="flex gap-3.5 items-center">
-          <Switch />
+          <Switch checked={useAI} onCheckedChange={setUseAI} />
           <p className="text-black lg:text-sm text-xs font-semibold">
             Use Passmark AI Assistant
           </p>
@@ -481,7 +532,7 @@ const CreateAssessment = () => {
             </Button>
             <Button
               className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
-              onClick={() => setIsOpen(true)}
+              onClick={handleContinue}
             >
               {questions.length > 1 ? "Finish" : "Continue"}
             </Button>
