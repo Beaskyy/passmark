@@ -67,45 +67,37 @@ const NewStudent = () => {
     return isValid;
   };
 
-  const addStudent = async () => {
-    // Get the last student in the list
-    const lastStudent = students[students.length - 1];
-
-    // Validate the last student's fields
-    if (!validateStudent(lastStudent)) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Create the student
-      const response = await createStudent.mutateAsync({
-        course_id: courseId as string,
-        student_number: lastStudent.id,
-        full_name: lastStudent.name,
-      });
-
-      console.log("Student created with response:", response);
-
-      // Update the last student with their server-generated ID
-      const newStudents = [...students];
-      newStudents[newStudents.length - 1] = {
-        ...lastStudent,
-        student_id: response.data?.student_id || response.student_id, // Handle both response formats
-      };
-
-      toast.success("Student added successfully");
-
-      // Add a new empty student form
-      setStudents([...newStudents, { id: "", name: "", error: {} }]);
-    } catch (error) {
-      console.error("Error creating student:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to add student"
-      );
-    } finally {
-      setIsSubmitting(false);
+  const handleStudentBlur = async (index: number) => {
+    const student = students[index];
+    // Only create if both fields are filled and not already created
+    if (student.id.trim() && student.name.trim() && !student.student_id) {
+      setIsSubmitting(true);
+      try {
+        const response = await createStudent.mutateAsync({
+          course_id: courseId as string,
+          student_number: student.id,
+          full_name: student.name,
+        });
+        // Update the student with their server-generated ID
+        let newStudents = [...students];
+        newStudents[index] = {
+          ...student,
+          student_id: response.data?.student_id || response.student_id,
+        };
+        // If there is no empty student form at the end, add one
+        const last = newStudents[newStudents.length - 1];
+        if (last.id.trim() && last.name.trim()) {
+          newStudents = [...newStudents, { id: "", name: "", error: {} }];
+        }
+        setStudents(newStudents);
+        // toast.success("Student added successfully");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to add student"
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -241,6 +233,7 @@ const NewStudent = () => {
                 value={student.id}
                 onChange={(e) => updateStudent(index, "id", e.target.value)}
                 required
+                onBlur={() => handleStudentBlur(index)}
               />
               {student.error?.id && (
                 <span className="text-xs text-red-500 mt-1">
@@ -266,6 +259,7 @@ const NewStudent = () => {
                       updateStudent(index, "name", e.target.value)
                     }
                     required
+                    onBlur={() => handleStudentBlur(index)}
                   />
                   {student.error?.name && (
                     <span className="text-xs text-red-500 mt-1">
@@ -287,7 +281,9 @@ const NewStudent = () => {
         ))}
         <div
           className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
-          onClick={addStudent}
+          onClick={() =>
+            setStudents([...students, { id: "", name: "", error: {} }])
+          }
         >
           <Plus size={20} />
           Add New Student(s)

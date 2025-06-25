@@ -4,22 +4,19 @@ import { useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
 
-type CreateQuestionPayload = {
-  course_id: string | undefined;
-  assessment_id: string | undefined;
-  number: string;
-  text: string;
-  total_marks: number;
-  by_ai: boolean;
+export type CreateAssessmentPayload = {
+  course_id: string;
+  title: string;
+  description: string;
 };
 
-const createQuestion = async (
+const createAssessment = async (
   token: string,
   orgId: string,
-  payload: CreateQuestionPayload
+  payload: CreateAssessmentPayload
 ) => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/question/create/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/assessment/create/`,
     {
       method: "POST",
       headers: {
@@ -35,23 +32,23 @@ const createQuestion = async (
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to create question");
+    throw new Error(errorData.message || "Failed to create assessment");
   }
 
   return response.json();
 };
 
-export const useCreateQuestion = () => {
+export const useCreateAssessment = () => {
   const { data: session } = useSession();
   const { user } = useAccount();
   const token = session?.accessToken;
   const orgId = user?.organisation?.org_id;
 
   return useMutation({
-    mutationFn: (payload: CreateQuestionPayload) => {
+    mutationFn: (payload: CreateAssessmentPayload) => {
       if (!token) throw new Error("No access token");
       if (!orgId) throw new Error("No organisation ID");
-      return createQuestion(token, orgId, payload);
+      return createAssessment(token, orgId, payload);
     },
   });
 };

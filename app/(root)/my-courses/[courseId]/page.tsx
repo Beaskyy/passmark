@@ -147,7 +147,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
         </div>
         <div className="flex items-center gap-[14px]">
           <Link
-            href={"/assessments/create"}
+            href={`/my-courses/${courseId}/assessments/create`}
             className="flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
                 "
           >
@@ -350,7 +350,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                 image="/images/empty-state.svg"
                 title="No Assessment"
                 desc="You've not added any assessment yet"
-                link="/assessment"
+                link={`/my-courses/${courseId}/assessments/create`}
                 buttonText="Create Assessment"
                 showIcon={false}
               />
