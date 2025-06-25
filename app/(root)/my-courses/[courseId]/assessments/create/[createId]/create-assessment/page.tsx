@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCreateQuestion } from "@/hooks/useCreateQuestion";
+import { useCreateAssessment } from "@/hooks/useCreateAssessment";
+import { useUpdateAssessment } from "@/hooks/useUpdateAssessment";
+import { useUpdateQuestion } from "@/hooks/useUpdateQuestion";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -42,6 +45,14 @@ type Question = {
 
 const CreateAssessment = () => {
   const router = useRouter();
+  const path = usePathname();
+  const segments = path?.split("/");
+  const courseId = segments[2];
+  const title = segments[5];
+  const [description, setDescription] = useState("");
+  const [assessmentId, setAssessmentId] = useState<string | undefined>(
+    undefined
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [useAI, setUseAI] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([
@@ -57,43 +68,91 @@ const CreateAssessment = () => {
       showBonuses: false,
     },
   ]);
+  const createAssessment = useCreateAssessment();
+  const updateAssessment = useUpdateAssessment();
   const createQuestion = useCreateQuestion();
+  const updateQuestionApi = useUpdateQuestion();
 
-  const handleCreateQuestion = async (question: Question, index: number) => {
-    if (
-      !question.isCreated &&
-      question.questionNumber.trim() &&
-      question.totalMark.trim() &&
-      question.question.trim() &&
-      question.answer.trim()
-    ) {
+  const handleDescriptionBlur = async () => {
+    if (!description.trim()) return;
+    if (!assessmentId) {
+      // Create assessment
       try {
-        const course_id = "59a9aba8-fdc0-44ea-bc18-e4f86bade9e1";
-        const assessment_id = "3f07ce95-85b2-45b2-b694-8542b1e40690";
-        const payload = {
-          course_id,
-          assessment_id,
-          number: question.questionNumber,
-          text: question.question,
-          total_marks: Number(question.totalMark),
-          by_ai: useAI,
-        };
-        const response = await createQuestion.mutateAsync(payload);
-        const newQuestions = [...questions];
-        newQuestions[index] = {
-          ...question,
-          isCreated: true,
-          question_id: response.data?.question_id || response.question_id,
-        };
-        setQuestions(newQuestions);
+        const response = await createAssessment.mutateAsync({
+          course_id: courseId,
+          title,
+          description,
+        });
+        setAssessmentId(response.data?.assessment_id || response.assessment_id);
+      } catch (error) {
+        // Optionally show error toast
+      }
+    } else {
+      // Update assessment
+      try {
+        await updateAssessment.mutateAsync({
+          assessment_id: assessmentId,
+          course_id: courseId,
+          title,
+          description,
+        });
       } catch (error) {
         // Optionally show error toast
       }
     }
   };
 
+  const handleQuestionBlur = async (question: Question, index: number) => {
+    // Only proceed if any of the fields are filled
+    if (
+      question.questionNumber.trim() ||
+      question.totalMark.trim() ||
+      question.question.trim()
+    ) {
+      // If not created, create
+      if (!question.isCreated) {
+        try {
+          const payload = {
+            course_id: courseId,
+            assessment_id: assessmentId!,
+            number: question.questionNumber,
+            text: question.question,
+            total_marks: Number(question.totalMark),
+            by_ai: useAI,
+          };
+          const response = await createQuestion.mutateAsync(payload);
+          const newQuestions = [...questions];
+          newQuestions[index] = {
+            ...question,
+            isCreated: true,
+            question_id: response.data?.question_id || response.question_id,
+          };
+          setQuestions(newQuestions);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      } else if (question.question_id) {
+        // If already created, update
+        try {
+          const payload = {
+            question_id: question.question_id,
+            course_id: courseId,
+            assessment_id: assessmentId!,
+            number: question.questionNumber,
+            text: question.question,
+            total_marks: Number(question.totalMark),
+            by_ai: useAI,
+          };
+          await updateQuestionApi.mutateAsync(payload);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      }
+    }
+  };
+
   const addNewQuestion = async () => {
-    await handleCreateQuestion(
+    await handleQuestionBlur(
       questions[questions.length - 1],
       questions.length - 1
     );
@@ -114,7 +173,7 @@ const CreateAssessment = () => {
   };
 
   const handleContinue = async () => {
-    await handleCreateQuestion(
+    await handleQuestionBlur(
       questions[questions.length - 1],
       questions.length - 1
     );
@@ -244,6 +303,9 @@ const CreateAssessment = () => {
         <Input
           className="placeholder:text-[#B3B3B3] min-h-[22px] text-black text-[22px] lg:font-medium !border-none !shadow-none"
           placeholder="Type assessment name here..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={handleDescriptionBlur}
         />
         <div className="flex gap-3.5 items-center">
           <Switch checked={useAI} onCheckedChange={setUseAI} />
@@ -276,6 +338,7 @@ const CreateAssessment = () => {
                         e.target.value
                       )
                     }
+                    onBlur={() => handleQuestionBlur(question, questionIndex)}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -294,6 +357,7 @@ const CreateAssessment = () => {
                           e.target.value
                         )
                       }
+                      onBlur={() => handleQuestionBlur(question, questionIndex)}
                     />
                   </div>
                 </div>
@@ -309,6 +373,7 @@ const CreateAssessment = () => {
                   onChange={(e) =>
                     updateQuestion(questionIndex, "question", e.target.value)
                   }
+                  onBlur={() => handleQuestionBlur(question, questionIndex)}
                 />
               </div>
               <div className="flex flex-col gap-1">

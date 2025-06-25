@@ -5,11 +5,13 @@ import ManualBackground from "@/components/ManualBackground";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import React, { useState } from "react";
 
-const AddQuestion = ({ params }: { params: { createId: string } }) => {
-  const { createId } = params;
+const AddQuestion = () => {
+  const params = useParams();
+  const courseId = params.courseId as string;
+  const createId = params.createId as string;
   const router = useRouter();
   const [showAddBulk, setShowAddBulk] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -108,7 +110,7 @@ const AddQuestion = ({ params }: { params: { createId: string } }) => {
                     />
                   </div>
                   <Link
-                    href={`/assessments/create/${createId}/create-assessment`}
+                    href={`/my-courses/${courseId}/assessments/create/${createId}/create-assessment`}
                     className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden cursor-pointer"
                   >
                     <div className="flex flex-col gap-1">

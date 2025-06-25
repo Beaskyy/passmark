@@ -95,7 +95,7 @@ const MyCourses = () => {
                       {title}
                     </h4>
                     <div className="flex items-center gap-1.5">
-                      <p className="lg:text-[13px] text-xs text-[#929292] font-medium">
+                      <p className="lg:text-[13px] text-xs text-[#929292] font-medium uppercase">
                         {code}
                       </p>
                       <div
