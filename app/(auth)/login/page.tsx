@@ -60,7 +60,7 @@ const Login = () => {
           toast.error("Invalid email or password");
         } else {
           toast.success("Login successful");
-          router.push("/");
+          router.push("/")
         }
       } catch (error) {
         toast.error("Something went wrong. Please try again.");

@@ -14,11 +14,13 @@ import {
 } from "./ui/dropdown-menu";
 import { Navigation } from "./navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useAccount } from "@/providers/AccountProvider";
 
 export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const { user } = useAccount();
 
   const handleLogout = async () => {
     try {
@@ -86,7 +88,7 @@ export const Header = () => {
                   />
                 </div>
                 <p className="text-sm font-medium tracking-[-0.6%]">
-                  {session?.user?.name || "User"}
+                  {`${user?.firstname} ${user?.lastname}` || session?.user?.name || "User"}
                 </p>
               </div>
               <Image
