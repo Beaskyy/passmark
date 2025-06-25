@@ -60,7 +60,7 @@ const OTPVerification = () => {
     },
     onSuccess: () => {
       toast.success("OTP verified successfully");
-      // router.push("/reset-password");
+      router.replace("/login");
     },
     onError: (error) => {
       toast.error(error.message || "Something went wrong. Please try again.");
