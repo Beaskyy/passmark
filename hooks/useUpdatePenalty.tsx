@@ -1,0 +1,56 @@
+"use client";
+
+import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { useAccount } from "@/providers/AccountProvider";
+
+export type UpdatePenaltyPayload = {
+  penalty_id: string;
+  question_id: string;
+  description: string;
+  mark: number;
+  by_ai: boolean;
+};
+
+const updatePenalty = async (
+  token: string,
+  orgId: string,
+  payload: UpdatePenaltyPayload
+) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/main/penalty/update/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ...payload,
+        organisation_id: orgId,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update penalty");
+  }
+
+  return response.json();
+};
+
+export const useUpdatePenalty = () => {
+  const { data: session } = useSession();
+  const { user } = useAccount();
+  const token = session?.accessToken;
+  const orgId = user?.organisation?.org_id;
+
+  return useMutation({
+    mutationFn: (payload: UpdatePenaltyPayload) => {
+      if (!token) throw new Error("No access token");
+      if (!orgId) throw new Error("No organisation ID");
+      return updatePenalty(token, orgId, payload);
+    },
+  });
+};
