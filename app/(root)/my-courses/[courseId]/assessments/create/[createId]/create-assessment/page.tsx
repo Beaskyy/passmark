@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,12 @@ import { useUpdateQuestion } from "@/hooks/useUpdateQuestion";
 import { useCreateMarkingGuide } from "@/hooks/useCreateMarkingGuide";
 import { useUpdateMarkingGuide } from "@/hooks/useUpdateMarkingGuide";
 import { useDeleteMarkingGuide } from "@/hooks/useDeleteMarkingGuide";
+import { useCreatePenalty } from "@/hooks/useCreatePenalty";
+import { useUpdatePenalty } from "@/hooks/useUpdatePenalty";
+import { useDeletePenalty } from "@/hooks/useDeletePenalty";
+import { useCreateBonus } from "@/hooks/useCreateBonus";
+import { useUpdateBonus } from "@/hooks/useUpdateBonus";
+import { useDeleteBonus } from "@/hooks/useDeleteBonus";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -27,10 +33,14 @@ type Criterion = {
 
 type Penalty = {
   description: string;
+  mark?: string;
+  penalty_id?: string;
 };
 
 type Bonus = {
   description: string;
+  mark?: string;
+  bonus_id?: string;
 };
 
 type Question = {
@@ -79,6 +89,48 @@ const CreateAssessment = () => {
   const createMarkingGuide = useCreateMarkingGuide();
   const updateMarkingGuide = useUpdateMarkingGuide();
   const deleteMarkingGuide = useDeleteMarkingGuide();
+  const createPenalty = useCreatePenalty();
+  const updatePenaltyApi = useUpdatePenalty();
+  const deletePenalty = useDeletePenalty();
+  const createBonus = useCreateBonus();
+  const updateBonusApi = useUpdateBonus();
+  const deleteBonus = useDeleteBonus();
+
+  const [debouncedDescription, setDebouncedDescription] = useState("");
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce effect for assessment creation
+  useEffect(() => {
+    if (!description.trim()) return;
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(async () => {
+      try {
+        if (!assessmentId) {
+          const response = await createAssessment.mutateAsync({
+            course_id: courseId,
+            title,
+            description,
+          });
+          setAssessmentId(
+            response.data?.assessment_id || response.assessment_id
+          );
+        } else {
+          await updateAssessment.mutateAsync({
+            assessment_id: assessmentId,
+            course_id: courseId,
+            title,
+            description,
+          });
+        }
+      } catch (error) {
+        // Optionally show error toast
+      }
+    }, 500);
+    return () => {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [description]);
 
   const handleDescriptionBlur = async () => {
     if (!description.trim()) return;
@@ -133,6 +185,9 @@ const CreateAssessment = () => {
             ...question,
             isCreated: true,
             question_id: response.data?.question_id || response.question_id,
+            criteria: [{ criterion: "", mark: "", description: "" }],
+            penalties: [{ description: "", mark: "" }],
+            bonuses: [{ description: "", mark: "" }],
           };
           setQuestions(newQuestions);
         } catch (error) {
@@ -249,10 +304,11 @@ const CreateAssessment = () => {
   const updatePenalty = (
     questionIndex: number,
     penaltyIndex: number,
+    field: keyof Penalty,
     value: string
   ) => {
     const newQuestions = [...questions];
-    newQuestions[questionIndex].penalties[penaltyIndex].description = value;
+    newQuestions[questionIndex].penalties[penaltyIndex][field] = value;
     setQuestions(newQuestions);
   };
 
@@ -277,10 +333,11 @@ const CreateAssessment = () => {
   const updateBonus = (
     questionIndex: number,
     bonusIndex: number,
+    field: keyof Bonus,
     value: string
   ) => {
     const newQuestions = [...questions];
-    newQuestions[questionIndex].bonuses[bonusIndex].description = value;
+    newQuestions[questionIndex].bonuses[bonusIndex][field] = value;
     setQuestions(newQuestions);
   };
 
@@ -350,6 +407,134 @@ const CreateAssessment = () => {
     removeCriterion(questionIndex, criterionIndex);
   };
 
+  const handlePenaltyBlur = async (
+    question: Question,
+    questionIndex: number,
+    penalty: Penalty,
+    penaltyIndex: number
+  ) => {
+    // Only proceed if description and mark are filled and question_id exists
+    if (
+      penalty.description.trim() &&
+      penalty.mark &&
+      penalty.mark.trim() &&
+      question.question_id
+    ) {
+      if (!penalty.penalty_id) {
+        // Create penalty
+        try {
+          const payload = {
+            question_id: question.question_id,
+            description: penalty.description,
+            mark: Number(penalty.mark),
+            by_ai: useAI,
+          };
+          const response = await createPenalty.mutateAsync(payload);
+          // Update penalty_id in state
+          const newQuestions = [...questions];
+          newQuestions[questionIndex].penalties[penaltyIndex].penalty_id =
+            response.data?.penalty_id || response.penalty_id;
+          setQuestions(newQuestions);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      } else {
+        // Update penalty
+        try {
+          const payload = {
+            penalty_id: penalty.penalty_id,
+            question_id: question.question_id,
+            description: penalty.description,
+            mark: Number(penalty.mark),
+            by_ai: useAI,
+          };
+          await updatePenaltyApi.mutateAsync(payload);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      }
+    }
+  };
+
+  const handleDeletePenalty = async (
+    questionIndex: number,
+    penaltyIndex: number
+  ) => {
+    const penalty = questions[questionIndex].penalties[penaltyIndex];
+    if (penalty.penalty_id) {
+      try {
+        await deletePenalty.mutateAsync({ penalty_id: penalty.penalty_id });
+      } catch (error) {
+        // Optionally show error toast
+      }
+    }
+    removePenalty(questionIndex, penaltyIndex);
+  };
+
+  const handleBonusBlur = async (
+    question: Question,
+    questionIndex: number,
+    bonus: Bonus,
+    bonusIndex: number
+  ) => {
+    // Only proceed if description and mark are filled and question_id exists
+    if (
+      bonus.description.trim() &&
+      bonus.mark &&
+      bonus.mark.trim() &&
+      question.question_id
+    ) {
+      if (!bonus.bonus_id) {
+        // Create bonus
+        try {
+          const payload = {
+            question_id: question.question_id,
+            description: bonus.description,
+            mark: Number(bonus.mark),
+            by_ai: useAI,
+          };
+          const response = await createBonus.mutateAsync(payload);
+          // Update bonus_id in state
+          const newQuestions = [...questions];
+          newQuestions[questionIndex].bonuses[bonusIndex].bonus_id =
+            response.data?.bonus_id || response.bonus_id;
+          setQuestions(newQuestions);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      } else {
+        // Update bonus
+        try {
+          const payload = {
+            bonus_id: bonus.bonus_id,
+            question_id: question.question_id,
+            description: bonus.description,
+            mark: Number(bonus.mark),
+            by_ai: useAI,
+          };
+          await updateBonusApi.mutateAsync(payload);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      }
+    }
+  };
+
+  const handleDeleteBonus = async (
+    questionIndex: number,
+    bonusIndex: number
+  ) => {
+    const bonus = questions[questionIndex].bonuses[bonusIndex];
+    if (bonus.bonus_id) {
+      try {
+        await deleteBonus.mutateAsync({ bonus_id: bonus.bonus_id });
+      } catch (error) {
+        // Optionally show error toast
+      }
+    }
+    removeBonus(questionIndex, bonusIndex);
+  };
+
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
@@ -378,7 +563,6 @@ const CreateAssessment = () => {
           placeholder="Type assessment name here..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          onBlur={handleDescriptionBlur}
         />
         <div className="flex gap-3.5 items-center">
           <Switch checked={useAI} onCheckedChange={setUseAI} />
@@ -392,317 +576,407 @@ const CreateAssessment = () => {
             height={22}
           />
         </div>
-        <div className="flex flex-col gap-[112px]">
-          {questions.map((question, questionIndex) => (
-            <div key={questionIndex} className="flex flex-col gap-8">
-              <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
-                <div className="flex flex-col gap-1">
-                  <Label className="text-sm text-[#171717] font-medium">
-                    Question number <span className="text-[#335CFF]">*</span>
-                  </Label>
-                  <Input
-                    placeholder="eg. 1a, 2b"
-                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                    value={question.questionNumber}
-                    onChange={(e) =>
-                      updateQuestion(
-                        questionIndex,
-                        "questionNumber",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() => handleQuestionBlur(question, questionIndex)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-sm text-[#171717] font-medium">
-                    Total Mark <span className="text-[#335CFF]">*</span>
-                  </Label>
-                  <div className="flex items-center gap-3.5">
+        {assessmentId && (
+          <div className="flex flex-col gap-[112px]">
+            {questions.map((question, questionIndex) => (
+              <div key={questionIndex} className="flex flex-col gap-8">
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-sm text-[#171717] font-medium">
+                      Question number <span className="text-[#335CFF]">*</span>
+                    </Label>
                     <Input
-                      placeholder="eg. 20 Marks"
+                      placeholder="eg. 1a, 2b"
                       className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                      value={question.totalMark}
+                      value={question.questionNumber}
                       onChange={(e) =>
                         updateQuestion(
                           questionIndex,
-                          "totalMark",
+                          "questionNumber",
                           e.target.value
                         )
                       }
                       onBlur={() => handleQuestionBlur(question, questionIndex)}
                     />
                   </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-sm text-[#171717] font-medium">
+                      Total Mark <span className="text-[#335CFF]">*</span>
+                    </Label>
+                    <div className="flex items-center gap-3.5">
+                      <Input
+                        placeholder="eg. 20 Marks"
+                        className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                        value={question.totalMark}
+                        onChange={(e) =>
+                          updateQuestion(
+                            questionIndex,
+                            "totalMark",
+                            e.target.value
+                          )
+                        }
+                        onBlur={() =>
+                          handleQuestionBlur(question, questionIndex)
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label className="text-sm text-[#171717] font-medium">
-                  Question <span className="text-[#335CFF]">*</span>
-                </Label>
-                <Input
-                  placeholder="Explain the key difference between Animal cell and Plant cell"
-                  className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                  value={question.question}
-                  onChange={(e) =>
-                    updateQuestion(questionIndex, "question", e.target.value)
-                  }
-                  onBlur={() => handleQuestionBlur(question, questionIndex)}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label className="text-sm text-[#171717] font-medium">
-                  Answer <span className="text-[#335CFF]">*</span>
-                </Label>
-                <Input
-                  placeholder="Explain the key difference between Animal cell and Plant cell"
-                  className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                  value={question.answer}
-                  onChange={(e) =>
-                    updateQuestion(questionIndex, "answer", e.target.value)
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-3.5">
-                <h2 className="text-black lg:text-[15px] text-sm font-semibold">
-                  Marking Criterion
-                </h2>
-                {question.criteria.map((criterion, criterionIndex) => (
-                  <div
-                    key={criterionIndex}
-                    className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-sm text-[#171717] font-medium">
-                        Criterion <span className="text-[#335CFF]">*</span>
-                      </Label>
-                      <Input
-                        placeholder="Definition of animal cell"
-                        className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                        value={criterion.criterion}
-                        onChange={(e) =>
-                          updateCriterion(
-                            questionIndex,
-                            criterionIndex,
-                            "criterion",
-                            e.target.value
-                          )
-                        }
-                        onBlur={() =>
-                          handleCriterionBlur(
-                            question,
-                            questionIndex,
-                            criterion,
-                            criterionIndex
-                          )
-                        }
-                      />
+                <div className="flex flex-col gap-1">
+                  <Label className="text-sm text-[#171717] font-medium">
+                    Question <span className="text-[#335CFF]">*</span>
+                  </Label>
+                  <Input
+                    placeholder="Explain the key difference between Animal cell and Plant cell"
+                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                    value={question.question}
+                    onChange={(e) =>
+                      updateQuestion(questionIndex, "question", e.target.value)
+                    }
+                    onBlur={() => handleQuestionBlur(question, questionIndex)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label className="text-sm text-[#171717] font-medium">
+                    Answer <span className="text-[#335CFF]">*</span>
+                  </Label>
+                  <Input
+                    placeholder="Explain the key difference between Animal cell and Plant cell"
+                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                    value={question.answer}
+                    onChange={(e) =>
+                      updateQuestion(questionIndex, "answer", e.target.value)
+                    }
+                  />
+                </div>
+                {question.question_id && (
+                  <>
+                    <div className="flex flex-col gap-3.5">
+                      <h2 className="text-black lg:text-[15px] text-sm font-semibold">
+                        Marking Criterion
+                      </h2>
+                      {question.criteria.map((criterion, criterionIndex) => (
+                        <div
+                          key={criterionIndex}
+                          className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-sm text-[#171717] font-medium">
+                              Criterion{" "}
+                              <span className="text-[#335CFF]">*</span>
+                            </Label>
+                            <Input
+                              placeholder="Definition of animal cell"
+                              className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                              value={criterion.criterion}
+                              onChange={(e) =>
+                                updateCriterion(
+                                  questionIndex,
+                                  criterionIndex,
+                                  "criterion",
+                                  e.target.value
+                                )
+                              }
+                              onBlur={() =>
+                                handleCriterionBlur(
+                                  question,
+                                  questionIndex,
+                                  criterion,
+                                  criterionIndex
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-sm text-[#171717] font-medium">
+                              Mark <span className="text-[#335CFF]">*</span>
+                            </Label>
+                            <Input
+                              placeholder="10"
+                              className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                              value={criterion.mark}
+                              onChange={(e) =>
+                                updateCriterion(
+                                  questionIndex,
+                                  criterionIndex,
+                                  "mark",
+                                  e.target.value
+                                )
+                              }
+                              onBlur={() =>
+                                handleCriterionBlur(
+                                  question,
+                                  questionIndex,
+                                  criterion,
+                                  criterionIndex
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-sm text-[#171717] font-medium">
+                              Description{" "}
+                              <span className="text-[#335CFF]">*</span>
+                            </Label>
+                            <div className="flex items-center gap-3.5">
+                              <Input
+                                placeholder="Clear and Correct Definition Provided"
+                                className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                                value={criterion.description}
+                                onChange={(e) =>
+                                  updateCriterion(
+                                    questionIndex,
+                                    criterionIndex,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
+                                onBlur={() =>
+                                  handleCriterionBlur(
+                                    question,
+                                    questionIndex,
+                                    criterion,
+                                    criterionIndex
+                                  )
+                                }
+                              />
+                              {question.criteria.length > 1 && (
+                                <div
+                                  className="flex justify-center items-center size-8 rounded-lg bg-[#FFE9E9] cursor-pointer"
+                                  onClick={() =>
+                                    handleDeleteCriterion(
+                                      questionIndex,
+                                      criterionIndex
+                                    )
+                                  }
+                                >
+                                  <Trash2 className="text-[#EB5D57] w-[12.44x] h-3.5" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div
+                        className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
+                        onClick={() => addCriterion(questionIndex)}
+                      >
+                        <Plus size={20} />
+                        Add New Criterion
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-sm text-[#171717] font-medium">
-                        Mark <span className="text-[#335CFF]">*</span>
-                      </Label>
-                      <Input
-                        placeholder="10"
-                        className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                        value={criterion.mark}
-                        onChange={(e) =>
-                          updateCriterion(
-                            questionIndex,
-                            criterionIndex,
-                            "mark",
-                            e.target.value
-                          )
-                        }
-                        onBlur={() =>
-                          handleCriterionBlur(
-                            question,
-                            questionIndex,
-                            criterion,
-                            criterionIndex
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-sm text-[#171717] font-medium">
-                        Description <span className="text-[#335CFF]">*</span>
-                      </Label>
-                      <div className="flex items-center gap-3.5">
-                        <Input
-                          placeholder="Clear and Correct Definition Provided"
-                          className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                          value={criterion.description}
-                          onChange={(e) =>
-                            updateCriterion(
+                    <div className="flex flex-col gap-[15px]">
+                      <div className="flex gap-2.5 items-center">
+                        <Switch
+                          checked={question.showPenalties}
+                          onCheckedChange={(checked) =>
+                            updateQuestion(
                               questionIndex,
-                              criterionIndex,
-                              "description",
-                              e.target.value
-                            )
-                          }
-                          onBlur={() =>
-                            handleCriterionBlur(
-                              question,
-                              questionIndex,
-                              criterion,
-                              criterionIndex
+                              "showPenalties",
+                              checked
                             )
                           }
                         />
-                        {question.criteria.length > 1 && (
-                          <div
-                            className="flex justify-center items-center size-8 rounded-lg bg-[#FFE9E9] cursor-pointer"
-                            onClick={() =>
-                              handleDeleteCriterion(
-                                questionIndex,
-                                criterionIndex
-                              )
-                            }
-                          >
-                            <Trash2 className="text-[#EB5D57] w-[12.44x] h-3.5" />
-                          </div>
-                        )}
+                        <p className="text-black lg:text-sm text-xs font-semibold">
+                          Penalties
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                ))}
-                <div
-                  className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
-                  onClick={() => addCriterion(questionIndex)}
-                >
-                  <Plus size={20} />
-                  Add New Criterion
-                </div>
-              </div>
-              <div className="flex flex-col gap-[15px]">
-                <div className="flex gap-2.5 items-center">
-                  <Switch
-                    checked={question.showPenalties}
-                    onCheckedChange={(checked) =>
-                      updateQuestion(questionIndex, "showPenalties", checked)
-                    }
-                  />
-                  <p className="text-black lg:text-sm text-xs font-semibold">
-                    Penalties
-                  </p>
-                </div>
-                {question.showPenalties && (
-                  <>
-                    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
-                      {question.penalties.map((penalty, penaltyIndex) => (
-                        <div key={penaltyIndex} className="flex flex-col gap-1">
-                          <Label className="text-sm text-[#171717] font-medium">
-                            Penalty {penaltyIndex + 1}{" "}
-                            <span className="text-[#335CFF]">*</span>
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              placeholder="Deduct 1 mark if no example is provided"
-                              className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                              value={penalty.description}
-                              onChange={(e) =>
-                                updatePenalty(
-                                  questionIndex,
-                                  penaltyIndex,
-                                  e.target.value
-                                )
-                              }
-                            />
-                            {question.penalties.length > 1 && (
-                              <Trash2
-                                className="absolute text-[#EB5D57] size-[22px] right-2.5 top-2.5 cursor-pointer"
-                                onClick={() =>
-                                  removePenalty(questionIndex, penaltyIndex)
-                                }
-                              />
-                            )}
+                      {question.showPenalties && (
+                        <>
+                          <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                            {question.penalties.map((penalty, penaltyIndex) => (
+                              <div
+                                key={penaltyIndex}
+                                className="flex flex-col gap-1"
+                              >
+                                <Label className="text-sm text-[#171717] font-medium">
+                                  Penalty {penaltyIndex + 1}{" "}
+                                  <span className="text-[#335CFF]">*</span>
+                                </Label>
+                                <div className="relative">
+                                  <Input
+                                    placeholder="Deduct 1 mark if no example is provided"
+                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10 mb-2"
+                                    value={penalty.description}
+                                    onChange={(e) =>
+                                      updatePenalty(
+                                        questionIndex,
+                                        penaltyIndex,
+                                        "description",
+                                        e.target.value
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      handlePenaltyBlur(
+                                        question,
+                                        questionIndex,
+                                        penalty,
+                                        penaltyIndex
+                                      )
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="Penalty mark"
+                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                                    value={penalty.mark || ""}
+                                    onChange={(e) =>
+                                      updatePenalty(
+                                        questionIndex,
+                                        penaltyIndex,
+                                        "mark",
+                                        e.target.value
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      handlePenaltyBlur(
+                                        question,
+                                        questionIndex,
+                                        penalty,
+                                        penaltyIndex
+                                      )
+                                    }
+                                  />
+                                  {question.penalties.length > 1 && (
+                                    <Trash2
+                                      className="absolute text-[#EB5D57] size-[22px] right-2.5 top-2.5 cursor-pointer"
+                                      onClick={() =>
+                                        handleDeletePenalty(
+                                          questionIndex,
+                                          penaltyIndex
+                                        )
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      ))}
+                          <div
+                            className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
+                            onClick={() => addPenalty(questionIndex)}
+                          >
+                            <Plus size={20} />
+                            Add New Penalty
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div
-                      className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
-                      onClick={() => addPenalty(questionIndex)}
-                    >
-                      <Plus size={20} />
-                      Add New Penalty
+                    <div className="flex flex-col gap-[15px]">
+                      <div className="flex gap-2.5 items-center">
+                        <Switch
+                          checked={question.showBonuses}
+                          onCheckedChange={(checked) =>
+                            updateQuestion(
+                              questionIndex,
+                              "showBonuses",
+                              checked
+                            )
+                          }
+                        />
+                        <p className="text-black lg:text-sm text-xs font-semibold">
+                          Bonus
+                        </p>
+                      </div>
+                      {question.showBonuses && (
+                        <>
+                          <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                            {question.bonuses.map((bonus, bonusIndex) => (
+                              <div
+                                key={bonusIndex}
+                                className="flex flex-col gap-1"
+                              >
+                                <Label className="text-sm text-[#171717] font-medium">
+                                  Bonus {bonusIndex + 1}{" "}
+                                  <span className="text-[#335CFF]">*</span>
+                                </Label>
+                                <div className="relative">
+                                  <Input
+                                    placeholder="Add 1 mark if an example is provided"
+                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                                    value={bonus.description}
+                                    onChange={(e) =>
+                                      updateBonus(
+                                        questionIndex,
+                                        bonusIndex,
+                                        "description",
+                                        e.target.value
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      handleBonusBlur(
+                                        question,
+                                        questionIndex,
+                                        bonus,
+                                        bonusIndex
+                                      )
+                                    }
+                                  />
+                                  <Input
+                                    placeholder="Bonus mark"
+                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                                    value={bonus.mark || ""}
+                                    onChange={(e) =>
+                                      updateBonus(
+                                        questionIndex,
+                                        bonusIndex,
+                                        "mark",
+                                        e.target.value
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      handleBonusBlur(
+                                        question,
+                                        questionIndex,
+                                        bonus,
+                                        bonusIndex
+                                      )
+                                    }
+                                  />
+                                  {question.bonuses.length > 1 && (
+                                    <Trash2
+                                      className="absolute text-[#EB5D57] size-[22px] right-2.5 top-2.5 cursor-pointer"
+                                      onClick={() =>
+                                        handleDeleteBonus(
+                                          questionIndex,
+                                          bonusIndex
+                                        )
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div
+                            className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
+                            onClick={() => addBonus(questionIndex)}
+                          >
+                            <Plus size={20} />
+                            Add New Bonus
+                          </div>
+                        </>
+                      )}
                     </div>
                   </>
                 )}
               </div>
-              <div className="flex flex-col gap-[15px]">
-                <div className="flex gap-2.5 items-center">
-                  <Switch
-                    checked={question.showBonuses}
-                    onCheckedChange={(checked) =>
-                      updateQuestion(questionIndex, "showBonuses", checked)
-                    }
-                  />
-                  <p className="text-black lg:text-sm text-xs font-semibold">
-                    Bonus
-                  </p>
-                </div>
-                {question.showBonuses && (
-                  <>
-                    <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
-                      {question.bonuses.map((bonus, bonusIndex) => (
-                        <div key={bonusIndex} className="flex flex-col gap-1">
-                          <Label className="text-sm text-[#171717] font-medium">
-                            Bonus {bonusIndex + 1}{" "}
-                            <span className="text-[#335CFF]">*</span>
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              placeholder="Add 1 mark if an example is provided"
-                              className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                              value={bonus.description}
-                              onChange={(e) =>
-                                updateBonus(
-                                  questionIndex,
-                                  bonusIndex,
-                                  e.target.value
-                                )
-                              }
-                            />
-                            {question.bonuses.length > 1 && (
-                              <Trash2
-                                className="absolute text-[#EB5D57] size-[22px] right-2.5 top-2.5 cursor-pointer"
-                                onClick={() =>
-                                  removeBonus(questionIndex, bonusIndex)
-                                }
-                              />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div
-                      className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
-                      onClick={() => addBonus(questionIndex)}
-                    >
-                      <Plus size={20} />
-                      Add New Bonus
-                    </div>
-                  </>
-                )}
-              </div>
+            ))}
+            <div className="flex items-center gap-2.5">
+              <Button
+                className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] hover:text-[#F5F7FF] hover:bg-primary rounded-[10px] lg:font-semibold font-medium"
+                onClick={addNewQuestion}
+              >
+                Add New Question
+              </Button>
+              <Button
+                className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+                onClick={handleContinue}
+              >
+                {questions.length > 1 ? "Finish" : "Continue"}
+              </Button>
             </div>
-          ))}
-          <div className="flex items-center gap-2.5">
-            <Button
-              className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] hover:text-[#F5F7FF] hover:bg-primary rounded-[10px] lg:font-semibold font-medium"
-              onClick={addNewQuestion}
-            >
-              Add New Question
-            </Button>
-            <Button
-              className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
-              onClick={handleContinue}
-            >
-              {questions.length > 1 ? "Finish" : "Continue"}
-            </Button>
           </div>
-        </div>
+        )}
       </div>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="shadow-md flex flex-col justify-center items-center gap-4 p-5 w-[357px]  !rounded-[20px] border-none">
