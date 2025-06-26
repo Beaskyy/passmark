@@ -12,6 +12,9 @@ import { useCreateQuestion } from "@/hooks/useCreateQuestion";
 import { useCreateAssessment } from "@/hooks/useCreateAssessment";
 import { useUpdateAssessment } from "@/hooks/useUpdateAssessment";
 import { useUpdateQuestion } from "@/hooks/useUpdateQuestion";
+import { useCreateMarkingGuide } from "@/hooks/useCreateMarkingGuide";
+import { useUpdateMarkingGuide } from "@/hooks/useUpdateMarkingGuide";
+import { useDeleteMarkingGuide } from "@/hooks/useDeleteMarkingGuide";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -19,6 +22,7 @@ type Criterion = {
   criterion: string;
   mark: string;
   description: string;
+  guide_id?: string;
 };
 
 type Penalty = {
@@ -72,6 +76,9 @@ const CreateAssessment = () => {
   const updateAssessment = useUpdateAssessment();
   const createQuestion = useCreateQuestion();
   const updateQuestionApi = useUpdateQuestion();
+  const createMarkingGuide = useCreateMarkingGuide();
+  const updateMarkingGuide = useUpdateMarkingGuide();
+  const deleteMarkingGuide = useDeleteMarkingGuide();
 
   const handleDescriptionBlur = async () => {
     if (!description.trim()) return;
@@ -103,10 +110,10 @@ const CreateAssessment = () => {
   };
 
   const handleQuestionBlur = async (question: Question, index: number) => {
-    // Only proceed if any of the fields are filled
+    // Only proceed if all required fields are filled
     if (
-      question.questionNumber.trim() ||
-      question.totalMark.trim() ||
+      question.questionNumber.trim() &&
+      question.totalMark.trim() &&
       question.question.trim()
     ) {
       // If not created, create
@@ -277,6 +284,72 @@ const CreateAssessment = () => {
     setQuestions(newQuestions);
   };
 
+  const handleCriterionBlur = async (
+    question: Question,
+    questionIndex: number,
+    criterion: Criterion,
+    criterionIndex: number
+  ) => {
+    // Only proceed if all fields are filled
+    if (
+      criterion.criterion.trim() &&
+      criterion.mark.trim() &&
+      criterion.description.trim() &&
+      question.question_id
+    ) {
+      if (!criterion.guide_id) {
+        // Create marking guide
+        try {
+          const payload = {
+            question_id: question.question_id,
+            criteria: criterion.criterion,
+            description: criterion.description,
+            mark: Number(criterion.mark),
+            by_ai: useAI,
+          };
+          const response = await createMarkingGuide.mutateAsync(payload);
+          // Update guide_id in state
+          const newQuestions = [...questions];
+          newQuestions[questionIndex].criteria[criterionIndex].guide_id =
+            response.data?.guide_id || response.guide_id;
+          setQuestions(newQuestions);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      } else {
+        // Update marking guide
+        try {
+          const payload = {
+            guide_id: criterion.guide_id,
+            question_id: question.question_id,
+            criteria: criterion.criterion,
+            description: criterion.description,
+            mark: Number(criterion.mark),
+            by_ai: useAI,
+          };
+          await updateMarkingGuide.mutateAsync(payload);
+        } catch (error) {
+          // Optionally show error toast
+        }
+      }
+    }
+  };
+
+  const handleDeleteCriterion = async (
+    questionIndex: number,
+    criterionIndex: number
+  ) => {
+    const criterion = questions[questionIndex].criteria[criterionIndex];
+    if (criterion.guide_id) {
+      try {
+        await deleteMarkingGuide.mutateAsync({ guide_id: criterion.guide_id });
+      } catch (error) {
+        // Optionally show error toast
+      }
+    }
+    removeCriterion(questionIndex, criterionIndex);
+  };
+
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
       <div className="flex justify-between lg:items-center gap-4">
@@ -414,6 +487,14 @@ const CreateAssessment = () => {
                             e.target.value
                           )
                         }
+                        onBlur={() =>
+                          handleCriterionBlur(
+                            question,
+                            questionIndex,
+                            criterion,
+                            criterionIndex
+                          )
+                        }
                       />
                     </div>
                     <div className="flex flex-col gap-1">
@@ -430,6 +511,14 @@ const CreateAssessment = () => {
                             criterionIndex,
                             "mark",
                             e.target.value
+                          )
+                        }
+                        onBlur={() =>
+                          handleCriterionBlur(
+                            question,
+                            questionIndex,
+                            criterion,
+                            criterionIndex
                           )
                         }
                       />
@@ -451,12 +540,23 @@ const CreateAssessment = () => {
                               e.target.value
                             )
                           }
+                          onBlur={() =>
+                            handleCriterionBlur(
+                              question,
+                              questionIndex,
+                              criterion,
+                              criterionIndex
+                            )
+                          }
                         />
                         {question.criteria.length > 1 && (
                           <div
                             className="flex justify-center items-center size-8 rounded-lg bg-[#FFE9E9] cursor-pointer"
                             onClick={() =>
-                              removeCriterion(questionIndex, criterionIndex)
+                              handleDeleteCriterion(
+                                questionIndex,
+                                criterionIndex
+                              )
                             }
                           >
                             <Trash2 className="text-[#EB5D57] w-[12.44x] h-3.5" />
