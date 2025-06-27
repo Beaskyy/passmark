@@ -892,7 +892,7 @@ const CreateAssessment = () => {
                                 <div className="relative">
                                   <Input
                                     placeholder="Add 1 mark if an example is provided"
-                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
+                                    className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10 mb-2"
                                     value={bonus.description}
                                     onChange={(e) =>
                                       updateBonus(
