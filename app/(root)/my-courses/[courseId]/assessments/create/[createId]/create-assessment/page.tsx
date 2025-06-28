@@ -78,7 +78,7 @@ const CreateAssessment = () => {
       criteria: [{ criterion: "", mark: "", description: "" }],
       penalties: [{ description: "" }],
       bonuses: [{ description: "" }],
-      showPenalties: false,
+      showPenalties: true,
       showBonuses: false,
     },
   ]);
@@ -228,7 +228,7 @@ const CreateAssessment = () => {
         criteria: [{ criterion: "", mark: "", description: "" }],
         penalties: [{ description: "" }],
         bonuses: [{ description: "" }],
-        showPenalties: false,
+        showPenalties: true,
         showBonuses: false,
       },
     ]);
