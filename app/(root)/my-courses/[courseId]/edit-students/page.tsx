@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateStudent } from "@/hooks/useUpdateStudent";
 import { useFetchStudentList } from "@/hooks/useFetchStudentList";
+import EditStudentsSkeleton from "@/components/skeletons/EditStudentsSkeleton";
 
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
@@ -194,19 +195,7 @@ const ManageStudents = () => {
   };
 
   if (isLoading) {
-    return (
-      <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
-        <div className="flex justify-center items-center h-[50vh]">
-          <Image
-            src="/images/spinner.svg"
-            alt="loading"
-            width={40}
-            height={40}
-            className="animate-spin"
-          />
-        </div>
-      </main>
-    );
+    return <EditStudentsSkeleton />;
   }
 
   return (
@@ -220,22 +209,7 @@ const ManageStudents = () => {
             Manage Students
           </h3>
         </div>
-        {isSubmitting || deleteStudent.isPending ? (
-          <Image
-            src="/images/spinner.svg"
-            alt="spinner"
-            width={32}
-            height={32}
-            className="animate-spin"
-          />
-        ) : (
-          <Image
-            src="/images/spinner.svg"
-            alt="spinner"
-            width={32}
-            height={32}
-          />
-        )}
+        
       </div>
       <div className="flex flex-col gap-3.5 mt-6">
         <h2 className="text-black lg:text-[15px] text-sm font-semibold">
