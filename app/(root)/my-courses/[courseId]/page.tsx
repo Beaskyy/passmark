@@ -194,7 +194,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuLabel
-                onClick={() => router.push("/profile")}
+                onClick={() => router.push(`/my-courses/${courseId}/edit-students`)}
                 className="cursor-pointer"
               >
                 <span className="lg:text-sm text-xs font-medium text-[#333333]">
