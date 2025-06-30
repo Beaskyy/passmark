@@ -98,6 +98,7 @@ const CreateAssessment = () => {
 
   const [debouncedDescription, setDebouncedDescription] = useState("");
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const descriptionInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce effect for assessment creation
   useEffect(() => {
@@ -131,6 +132,13 @@ const CreateAssessment = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [description]);
+
+  // Effect to focus the input on mount
+  useEffect(() => {
+    if (descriptionInputRef.current) {
+      descriptionInputRef.current.focus();
+    }
+  }, []);
 
   const handleDescriptionBlur = async () => {
     if (!description.trim()) return;
@@ -559,6 +567,7 @@ const CreateAssessment = () => {
       </div>
       <div className="flex flex-col gap-11 mt-7">
         <Input
+          ref={descriptionInputRef}
           className="placeholder:text-[#B3B3B3] min-h-[22px] text-black text-[22px] lg:font-medium !border-none !shadow-none"
           placeholder="Type assessment name here..."
           value={description}
@@ -636,7 +645,7 @@ const CreateAssessment = () => {
                     onBlur={() => handleQuestionBlur(question, questionIndex)}
                   />
                 </div>
-                <div className="flex flex-col gap-1">
+                {/* <div className="flex flex-col gap-1">
                   <Label className="text-sm text-[#171717] font-medium">
                     Answer <span className="text-[#335CFF]">*</span>
                   </Label>
@@ -648,7 +657,7 @@ const CreateAssessment = () => {
                       updateQuestion(questionIndex, "answer", e.target.value)
                     }
                   />
-                </div>
+                </div> */}
                 {question.question_id && (
                   <>
                     <div className="flex flex-col gap-3.5">
