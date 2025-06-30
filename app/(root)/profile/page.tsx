@@ -15,9 +15,10 @@ import { useAccount } from "@/providers/AccountProvider";
 import { Eye, EyeClosed } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 
 const Profile = () => {
-  const { user } = useAccount();
+  const { user, isLoading } = useAccount();
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -69,6 +70,10 @@ const Profile = () => {
       setConfirmNewPasswordError("");
     }
   };
+
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
