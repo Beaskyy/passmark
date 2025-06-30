@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 
-const MyScript = () => {
+const AddStudents = () => {
   const router = useRouter();
   const [showAddBulk, setShowAddBulk] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -154,4 +154,4 @@ const MyScript = () => {
   );
 };
 
-export default MyScript;
+export default AddStudents;
