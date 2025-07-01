@@ -78,8 +78,10 @@ const NewStudent = () => {
         try {
           const response = await createStudent.mutateAsync({
             course_id: courseId as string,
-            student_number: student.id,
-            full_name: student.name,
+            student: {
+              student_number: student.id,
+              full_name: student.name,
+            },
           });
           // Update the student with their server-generated ID
           let newStudents = [...students];
@@ -187,8 +189,10 @@ const NewStudent = () => {
       try {
         const response = await createStudent.mutateAsync({
           course_id: courseId as string,
-          student_number: lastStudent.id,
-          full_name: lastStudent.name,
+          student: {
+            student_number: lastStudent.id,
+            full_name: lastStudent.name,
+          },
         });
         // Optionally update the student_id in state (not strictly needed since we're redirecting)
         // Redirect after successful add

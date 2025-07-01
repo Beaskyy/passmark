@@ -6,8 +6,10 @@ import { useAccount } from "@/providers/AccountProvider";
 
 export type CreateStudentPayload = {
   course_id: string;
-  student_number: string;
-  full_name: string;
+  student: {
+    student_number: string;
+    full_name: string;
+  };
 };
 
 const createStudent = async (
@@ -16,7 +18,7 @@ const createStudent = async (
   payload: CreateStudentPayload
 ) => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/student/create/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/student/enroll/create/`,
     {
       method: "POST",
       headers: {
@@ -24,8 +26,9 @@ const createStudent = async (
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        ...payload,
         organisation_id: orgId,
+        course_id: payload.course_id,
+        student: payload.student,
       }),
     }
   );

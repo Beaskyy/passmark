@@ -21,7 +21,7 @@ const AddStudents = () => {
   return (
     <main className="lg:px-[108px] md:px-[20] p-5">
       <div className="flex justify-between lg:items-center gap-4 mt-2">
-        <Link href="/new-course">
+        <Link href={`/my-courses/${courseId}`}>
           <Image src="/images/back.svg" alt="back" width={44} height={44} />
         </Link>
         {!showAddBulk && (

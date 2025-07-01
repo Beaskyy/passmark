@@ -10,7 +10,7 @@ import { useDeleteStudent } from "@/hooks/useDeleteStudent";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateStudent } from "@/hooks/useUpdateStudent";
-import { useFetchStudentList } from "@/hooks/useFetchStudentList";
+import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import EditStudentsSkeleton from "@/components/skeletons/EditStudentsSkeleton";
 
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,8 @@ const ManageStudents = () => {
   const createStudent = useCreateStudent();
   const deleteStudent = useDeleteStudent();
   const updateStudentApi = useUpdateStudent();
-  const { data: studentList, isLoading } = useFetchStudentList(
-    user?.organisation?.org_id || ""
+  const { data: studentList, isLoading } = useFetchEnrolledStudents(
+    courseId as string
   );
 
   useEffect(() => {
@@ -88,8 +88,10 @@ const ManageStudents = () => {
           // Create new student
           const response = await createStudent.mutateAsync({
             course_id: courseId as string,
-            student_number: student.id,
-            full_name: student.name,
+            student: {
+              student_number: student.id,
+              full_name: student.name,
+            },
           });
           // Update the student with their server-generated ID
           let newStudents = [...students];
@@ -178,8 +180,10 @@ const ManageStudents = () => {
       try {
         await createStudent.mutateAsync({
           course_id: courseId as string,
-          student_number: lastStudent.id,
-          full_name: lastStudent.name,
+          student: {
+            student_number: lastStudent.id,
+            full_name: lastStudent.name,
+          },
         });
         router.push(`/my-courses/${courseId}`);
         return;
@@ -209,7 +213,6 @@ const ManageStudents = () => {
             Manage Students
           </h3>
         </div>
-        
       </div>
       <div className="flex flex-col gap-3.5 mt-6">
         <h2 className="text-black lg:text-[15px] text-sm font-semibold">
