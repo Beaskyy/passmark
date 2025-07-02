@@ -50,7 +50,7 @@ const ManageStudents = () => {
         student_id: student.student_id,
         error: {},
       }));
-      setStudents([...transformedStudents, { id: "", name: "", error: {} }]);
+      setStudents(transformedStudents);
     }
   }, [studentList]);
 
@@ -99,11 +99,6 @@ const ManageStudents = () => {
             ...student,
             student_id: response.data?.student_id || response.student_id,
           };
-          // If there is no empty student form at the end, add one
-          const last = newStudents[newStudents.length - 1];
-          if (last.id.trim() && last.name.trim()) {
-            newStudents = [...newStudents, { id: "", name: "", error: {} }];
-          }
           setStudents(newStudents);
           toast.success("Student added successfully");
         } else {
@@ -170,21 +165,23 @@ const ManageStudents = () => {
   };
 
   const handleSubmit = async () => {
-    const lastStudent = students[students.length - 1];
-    if (
-      lastStudent.id.trim() &&
-      lastStudent.name.trim() &&
-      !lastStudent.student_id
-    ) {
+    // Find all new students (no student_id, both fields filled)
+    const newStudents = students.filter(
+      (student) =>
+        !student.student_id && student.id.trim() && student.name.trim()
+    );
+    if (newStudents.length > 0) {
       setIsSubmitting(true);
       try {
-        await createStudent.mutateAsync({
-          course_id: courseId as string,
-          student: {
-            student_number: lastStudent.id,
-            full_name: lastStudent.name,
-          },
-        });
+        for (const student of newStudents) {
+          await createStudent.mutateAsync({
+            course_id: courseId as string,
+            student: {
+              student_number: student.id,
+              full_name: student.name,
+            },
+          });
+        }
         router.push(`/my-courses/${courseId}`);
         return;
       } catch (error) {
@@ -281,9 +278,9 @@ const ManageStudents = () => {
         ))}
         <div
           className="flex items-center gap-1 cursor-pointer text-[#335CFF] lg:text-sm text-xs font-semibold hover:opacity-85"
-          onClick={() =>
-            setStudents([...students, { id: "", name: "", error: {} }])
-          }
+          onClick={() => {
+            setStudents([...students, { id: "", name: "", error: {} }]);
+          }}
         >
           <Plus size={20} />
           Add New Student
