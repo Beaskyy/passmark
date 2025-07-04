@@ -1,6 +1,12 @@
 import Image from "next/image";
 
-export default function ScriptCards() {
+export default function ScriptCards({
+  approvedCount,
+  pendingCount,
+}: {
+  approvedCount: number;
+  pendingCount: number;
+}) {
   return (
     <div className="grid lg:grid-cols-2 grid-cols-1 gap-[14px]">
       <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px]">
@@ -9,7 +15,7 @@ export default function ScriptCards() {
             Approved Scripts
           </p>
           <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
-            4,435 Scripts
+            {approvedCount} Scripts
           </h4>
         </div>
         <Image
@@ -26,7 +32,7 @@ export default function ScriptCards() {
             Pending Scripts
           </p>
           <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
-            2,343 Scripts
+            {pendingCount} Scripts
           </h4>
         </div>
         <Image
