@@ -30,7 +30,7 @@ const ScriptId = ({ params }: { params: { scriptId: string } }) => {
         </div>
         <div className="flex items-center gap-[14px]">
           <Link
-            href={"/new-course"}
+            href={"/upload-script"}
             className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
                 "
           >

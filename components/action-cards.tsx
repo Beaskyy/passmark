@@ -1,9 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ActionCards() {
   return (
     <div className="grid lg:grid-cols-2 grid-cols-1 gap-[14px]">
-      <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px]">
+      <Link href="/my-courses" className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm">
         <div className="flex flex-col lg:gap-2">
           <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
             Mark a New Script
@@ -19,8 +20,8 @@ export default function ActionCards() {
           height={44}
           className="lg:size-11 size-8"
         />
-      </div>
-      <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px]">
+      </Link>
+      <Link href="marked-scripts" className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm">
         <div className="flex flex-col lg:gap-2">
           <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
             Manage Marked Scripts
@@ -36,7 +37,7 @@ export default function ActionCards() {
           height={44}
           className="lg:size-11 size-8"
         />
-      </div>
+      </Link>
     </div>
   );
 }
