@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCreateStudent } from "@/hooks/useCreateStudent";
-import { useDeleteStudent } from "@/hooks/useDeleteStudent";
+import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateStudent } from "@/hooks/useUpdateStudent";
+import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
+import EditStudentsSkeleton from "@/components/skeletons/EditStudentsSkeleton";
 
 import {
   Select,
@@ -34,16 +36,35 @@ type Student = {
 };
 
 const NewStudent = () => {
-  const [students, setStudents] = useState<Student[]>([
-    { id: "", name: "", error: {} },
-  ]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { courseId } = useParams();
   const { user } = useAccount();
   const router = useRouter();
   const createStudent = useCreateStudent();
-  const deleteStudent = useDeleteStudent();
+  const deleteEnrollment = useDeleteEnrollment();
   const updateStudentApi = useUpdateStudent();
+  const { data: studentList, isLoading } = useFetchEnrolledStudents(
+    courseId as string
+  );
+
+  useEffect(() => {
+    if (studentList) {
+      // Transform the fetched students into our local format
+      const transformedStudents = studentList.map((student) => ({
+        id: student.student_number,
+        name: student.full_name,
+        student_id: student.student_id,
+        error: {},
+      }));
+      // Add an empty form at the end for new students
+      transformedStudents.push({ id: "", name: "", error: {} });
+      setStudents(transformedStudents);
+    } else {
+      // If no students loaded yet, start with one empty form
+      setStudents([{ id: "", name: "", error: {} }]);
+    }
+  }, [studentList]);
 
   const validateStudent = (student: Student): boolean => {
     const newError: { id?: string; name?: string } = {};
@@ -128,6 +149,9 @@ const NewStudent = () => {
   const removeStudent = async (index: number) => {
     const student = students[index];
     console.log("Attempting to remove student:", student);
+    console.log("User object:", user);
+    console.log("Organisation ID:", user?.organisation?.org_id);
+    console.log("Course ID:", courseId);
 
     try {
       // If the student has a student_id (means they were saved to the server)
@@ -136,11 +160,15 @@ const NewStudent = () => {
           "Calling delete endpoint for student_id:",
           student.student_id
         );
-        await deleteStudent.mutateAsync({
+        const payload = {
+          organisation_id: user?.organisation?.org_id || "",
+          course_id: courseId as string,
           student_id: student.student_id,
-        });
+        };
+        console.log("Delete payload:", payload);
+        await deleteEnrollment.mutateAsync(payload);
         console.log("Successfully deleted student from server");
-        toast.success("Student deleted successfully");
+        toast.success("Student enrollment deleted successfully");
       } else {
         console.log("Student was not saved to server, only removing from list");
       }
@@ -155,7 +183,9 @@ const NewStudent = () => {
     } catch (error) {
       console.error("Error deleting student:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete student"
+        error instanceof Error
+          ? error.message
+          : "Failed to delete student enrollment"
       );
     }
   };
@@ -178,37 +208,43 @@ const NewStudent = () => {
   };
 
   const handleSubmit = async () => {
-    const lastStudent = students[students.length - 1];
-    // If the last student is filled and not yet added (no student_id)
-    if (
-      lastStudent.id.trim() &&
-      lastStudent.name.trim() &&
-      !lastStudent.student_id
-    ) {
-      setIsSubmitting(true);
-      try {
-        const response = await createStudent.mutateAsync({
+    // Find all new students (no student_id, both fields filled)
+    const newStudents = students.filter(
+      (student) =>
+        !student.student_id && student.id.trim() && student.name.trim()
+    );
+
+    // If there are no new students to create, just redirect
+    if (newStudents.length === 0) {
+      router.push(`/my-courses/${courseId}`);
+      return;
+    }
+
+    // If there are new students to create, create them
+    setIsSubmitting(true);
+    try {
+      for (const student of newStudents) {
+        await createStudent.mutateAsync({
           course_id: courseId as string,
           student: {
-            student_number: lastStudent.id,
-            full_name: lastStudent.name,
+            student_number: student.id,
+            full_name: student.name,
           },
         });
-        // Optionally update the student_id in state (not strictly needed since we're redirecting)
-        // Redirect after successful add
-        router.push(`/my-courses/${courseId}`);
-        return;
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to add student"
-        );
-        setIsSubmitting(false);
-        return;
       }
+      toast.success("Students added successfully");
+      router.push(`/my-courses/${courseId}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add student"
+      );
+      setIsSubmitting(false);
     }
-    // Otherwise, just redirect
-    router.push(`/my-courses/${courseId}`);
   };
+
+  if (isLoading) {
+    return <EditStudentsSkeleton />;
+  }
 
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
@@ -221,7 +257,7 @@ const NewStudent = () => {
             Add my Student
           </h3>
         </div>
-        {isSubmitting || deleteStudent.isPending ? (
+        {isSubmitting || deleteEnrollment.isPending ? (
           <Image
             src="/images/spinner.svg"
             alt="spinner"
@@ -293,7 +329,7 @@ const NewStudent = () => {
                     </span>
                   )}
                 </div>
-                {students.length > 1 && (
+                {student.student_id && (
                   <div
                     className="flex justify-center items-center size-8 rounded-lg bg-[#FFE9E9] cursor-pointer"
                     onClick={() => removeStudent(index)}
@@ -312,7 +348,7 @@ const NewStudent = () => {
           }
         >
           <Plus size={20} />
-          Add New Student(s)
+          Add New Student
         </div>
       </div>
       <Button
