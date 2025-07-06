@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCreateStudent } from "@/hooks/useCreateStudent";
-import { useDeleteStudent } from "@/hooks/useDeleteStudent";
+import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useUpdateStudent } from "@/hooks/useUpdateStudent";
@@ -35,7 +35,7 @@ const ManageStudents = () => {
   const { user } = useAccount();
   const router = useRouter();
   const createStudent = useCreateStudent();
-  const deleteStudent = useDeleteStudent();
+  const deleteEnrollment = useDeleteEnrollment();
   const updateStudentApi = useUpdateStudent();
   const { data: studentList, isLoading } = useFetchEnrolledStudents(
     courseId as string
@@ -125,10 +125,12 @@ const ManageStudents = () => {
     const student = students[index];
     try {
       if (student.student_id) {
-        await deleteStudent.mutateAsync({
+        await deleteEnrollment.mutateAsync({
+          organisation_id: user?.organisation?.org_id || "",
+          course_id: courseId as string,
           student_id: student.student_id,
         });
-        toast.success("Student deleted successfully");
+        toast.success("Student enrollment deleted successfully");
       }
 
       const newStudents = students.filter((_, i) => i !== index);
@@ -142,7 +144,9 @@ const ManageStudents = () => {
       setStudents(newStudents);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete student"
+        error instanceof Error
+          ? error.message
+          : "Failed to delete student enrollment"
       );
     }
   };
@@ -170,29 +174,33 @@ const ManageStudents = () => {
       (student) =>
         !student.student_id && student.id.trim() && student.name.trim()
     );
-    if (newStudents.length > 0) {
-      setIsSubmitting(true);
-      try {
-        for (const student of newStudents) {
-          await createStudent.mutateAsync({
-            course_id: courseId as string,
-            student: {
-              student_number: student.id,
-              full_name: student.name,
-            },
-          });
-        }
-        router.push(`/my-courses/${courseId}`);
-        return;
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to add student"
-        );
-        setIsSubmitting(false);
-        return;
-      }
+
+    // If there are no new students to create, just redirect
+    if (newStudents.length === 0) {
+      router.push(`/my-courses/${courseId}`);
+      return;
     }
-    router.push(`/my-courses/${courseId}`);
+
+    // If there are new students to create, create them
+    setIsSubmitting(true);
+    try {
+      for (const student of newStudents) {
+        await createStudent.mutateAsync({
+          course_id: courseId as string,
+          student: {
+            student_number: student.id,
+            full_name: student.name,
+          },
+        });
+      }
+      toast.success("Students added successfully");
+      router.push(`/my-courses/${courseId}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add student"
+      );
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
