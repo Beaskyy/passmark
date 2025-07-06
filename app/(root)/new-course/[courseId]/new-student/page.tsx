@@ -51,7 +51,7 @@ const NewStudent = () => {
   useEffect(() => {
     if (studentList) {
       // Transform the fetched students into our local format
-      const transformedStudents = studentList.map((student) => ({
+      const transformedStudents: Student[] = studentList.map((student) => ({
         id: student.student_number,
         name: student.full_name,
         student_id: student.student_id,
