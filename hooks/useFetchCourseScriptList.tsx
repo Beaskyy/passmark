@@ -5,10 +5,10 @@ import type { MarkedScript } from "@/lib/data";
 
 const fetchCourseScriptList = async (
   token: string,
-  organisationId: string
+  courseId: string
 ): Promise<MarkedScript[]> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/script/list/course/${organisationId}/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/script/list/course/${courseId}/`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -22,19 +22,17 @@ const fetchCourseScriptList = async (
   return result.data; // Adjust if your backend wraps the list differently
 };
 
-export const useFetchCourseScriptList = (organisationId?: string) => {
+export const useFetchCourseScriptList = (courseId: string) => {
   const { data: session } = useSession();
-  const { user } = useAccount();
   const token = session?.accessToken;
-  const orgId = organisationId || user?.organisation?.org_id;
 
   return useQuery({
-    queryKey: ["courseScriptList", orgId],
+    queryKey: ["courseScriptList", courseId],
     queryFn: () => {
       if (!token) throw new Error("No access token");
-      if (!orgId) throw new Error("No organisation ID");
-      return fetchCourseScriptList(token, orgId);
+      if (!courseId) throw new Error("No course ID");
+      return fetchCourseScriptList(token, courseId);
     },
-    enabled: !!token && !!orgId,
+    enabled: !!token && !!courseId,
   });
 };

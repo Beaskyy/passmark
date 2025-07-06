@@ -13,10 +13,10 @@ export type Assessment = {
 
 const fetchAssessmentList = async (
   token: string,
-  courseId: string
+  assessmentId: string
 ): Promise<Assessment[]> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/assessment/list/${courseId}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/assessment/list/${assessmentId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -30,17 +30,17 @@ const fetchAssessmentList = async (
   return result.data; // Adjust if your backend wraps the list differently
 };
 
-export const useFetchAssessmentList = (courseId: string) => {
+export const useFetchAssessmentList = (assessmentId: string) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
 
   return useQuery({
-    queryKey: ["assessmentList", courseId],
+    queryKey: ["assessmentList", assessmentId],
     queryFn: () => {
       if (!token) throw new Error("No access token");
-      if (!courseId) throw new Error("No course ID");
-      return fetchAssessmentList(token, courseId);
+      if (!assessmentId) throw new Error("No assessment ID");
+      return fetchAssessmentList(token, assessmentId);
     },
-    enabled: !!token && !!courseId,
+    enabled: !!token && !!assessmentId,
   });
 };
