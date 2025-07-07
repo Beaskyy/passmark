@@ -100,6 +100,41 @@ const CreateAssessment = () => {
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const descriptionInputRef = useRef<HTMLInputElement>(null);
 
+  // Load from sessionStorage when courseId and title are available
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!courseId || !title) return;
+    const LOCAL_STORAGE_KEY = `create-assessment-${courseId}-${title}`;
+    const saved = sessionStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          if (parsed.description) setDescription(parsed.description);
+          if (parsed.questions) setQuestions(parsed.questions);
+          if (parsed.useAI !== undefined) setUseAI(parsed.useAI);
+          if (parsed.assessmentId) setAssessmentId(parsed.assessmentId);
+        }
+      } catch {}
+    }
+    // eslint-disable-next-line
+  }, [courseId, title]);
+
+  // Persist to sessionStorage on change
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!courseId || !title) return;
+    const LOCAL_STORAGE_KEY = `create-assessment-${courseId}-${title}`;
+    const data = {
+      description,
+      questions,
+      useAI,
+      assessmentId,
+    };
+    sessionStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    // eslint-disable-next-line
+  }, [description, questions, useAI, assessmentId, courseId, title]);
+
   // Debounce effect for assessment creation
   useEffect(() => {
     if (!description.trim()) return;

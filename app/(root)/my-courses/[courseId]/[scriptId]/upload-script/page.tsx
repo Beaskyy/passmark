@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader, Trash2, X } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { useCreateScript } from "@/hooks/useCreateScript";
 
 interface FileWithProgress {
   id: string;
@@ -18,9 +19,15 @@ interface FileWithProgress {
 
 const UploadScript = () => {
   const router = useRouter();
+  const params = useParams();
+  const courseId = params.courseId as string;
+  const scriptId = params.scriptId as string;
   const [files, setFiles] = useState<FileWithProgress[]>([]);
   const [isMarking, setIsMarking] = useState(false);
   const [markingProgress, setMarkingProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const { mutate: createScript, isPending: isCreating } = useCreateScript();
+  const [retryingFileId, setRetryingFileId] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -69,21 +76,108 @@ const UploadScript = () => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const handleMarkScript = () => {
+  const handleMarkScript = async () => {
     setIsMarking(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 1;
-      setMarkingProgress(progress);
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        // Navigate to next page or show completion message
-        setTimeout(() => {
-          router.push("/marked-scripts"); // or wherever you want to navigate after completion
-        }, 1000);
+    setUploadError(null);
+    setMarkingProgress(0);
+    try {
+      // Upload all files to Cloudinary
+      const uploaded = [];
+      for (let i = 0; i < files.length; i++) {
+        setMarkingProgress(Math.round((i / files.length) * 100));
+        const fileObj = files[i];
+        try {
+          const result = await uploadToCloudinary(fileObj.file);
+          uploaded.push(result);
+        } catch (err: any) {
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === fileObj.id
+                ? { ...f, status: "error", error: err.message }
+                : f
+            )
+          );
+          setUploadError("One or more files failed to upload to Cloudinary.");
+          setIsMarking(false);
+          return;
+        }
       }
-    }, 50);
+      setMarkingProgress(100);
+      // Call useCreateScript
+      createScript(
+        {
+          assessment_id: scriptId,
+          scripts: uploaded,
+        },
+        {
+          onSuccess: () => {
+            setTimeout(() => {
+              router.push(`/my-courses/${courseId}/${scriptId}`);
+            }, 1000);
+          },
+          onError: (err: any) => {
+            setUploadError(err.message || "Failed to mark script");
+            setIsMarking(false);
+          },
+        }
+      );
+    } catch (err: any) {
+      setUploadError(err.message || "Unexpected error");
+      setIsMarking(false);
+    }
+  };
+
+  // Cloudinary upload function
+  async function uploadToCloudinary(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+    );
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+    if (!res.ok) throw new Error("Cloudinary upload failed");
+    const data = await res.json();
+    return {
+      script_url: data.secure_url,
+      script_name: data.original_filename,
+      script_type: file.type,
+      script_size: file.size.toString(),
+    };
+  }
+
+  // Retry upload for a single file
+  const handleRetryUpload = async (fileId: string) => {
+    setRetryingFileId(fileId);
+    const fileObj = files.find((f) => f.id === fileId);
+    if (!fileObj) return;
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, status: "uploading", error: undefined } : f
+      )
+    );
+    try {
+      await uploadToCloudinary(fileObj.file);
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileId ? { ...f, status: "completed", error: undefined } : f
+        )
+      );
+      setRetryingFileId(null);
+    } catch (err: any) {
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileId ? { ...f, status: "error", error: err.message } : f
+        )
+      );
+      setRetryingFileId(null);
+    }
   };
 
   const isUploading = files.some((f) => f.status === "uploading");
@@ -182,14 +276,9 @@ const UploadScript = () => {
                                     </p>
                                     <p className="text-[#5C5C5C]">∙</p>
                                     <div className="flex items-center gap-1">
-                                      {fileObj.status === "uploading" && (
-                                        <>
-                                          <Loader className="text-primary size-4 animate-spin" />
-                                          <p className="text-[#171717] lg:text-xs text-[10px]">
-                                            Uploading...
-                                          </p>
-                                        </>
-                                      )}
+                                      {retryingFileId === fileObj.id ? (
+                                        <Loader className="inline-block size-4 animate-spin mr-1 align-middle" />
+                                      ) : null}
                                       {fileObj.status === "completed" && (
                                         <>
                                           <Image
@@ -220,7 +309,15 @@ const UploadScript = () => {
                                     </div>
                                   </div>
                                   {fileObj.status === "error" && (
-                                    <p className="text-[#FB3748] lg:text-sm text-xs tracking-[-0.06%] underline font-medium">
+                                    <p
+                                      className="text-[#FB3748] lg:text-sm text-xs tracking-[-0.06%] underline font-medium cursor-pointer"
+                                      onClick={() =>
+                                        handleRetryUpload(fileObj.id)
+                                      }
+                                    >
+                                      {retryingFileId === fileObj.id ? (
+                                        <Loader className="inline-block size-4 animate-spin mr-1 align-middle" />
+                                      ) : null}
                                       Try Again
                                     </p>
                                   )}
@@ -253,11 +350,18 @@ const UploadScript = () => {
 
                   <Button
                     className="w-[174px] md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 disabled:bg-[#F6F6F6] disabled:bg-none disabled:text-[#9A9A9A]"
-                    disabled={!hasFiles || isUploading}
+                    disabled={
+                      !hasFiles || isUploading || isMarking || isCreating
+                    }
                     onClick={handleMarkScript}
                   >
                     Mark Script
                   </Button>
+                  {uploadError && (
+                    <div className="text-red-500 text-xs mt-2">
+                      {uploadError}
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { columns } from "@/app/(root)/components/columns";
 import { DataTable } from "@/components/data-table";
@@ -11,10 +11,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { useFetchAssessmentList } from "@/hooks/useFetchAssessmentList";
+import ScriptsTableSkeleton from "@/components/skeletons/ScriptsTableSkeleton";
+import { useFetchAssessmentDetails } from "@/hooks/useFetchAssessmentDetails";
 
-const ScriptId = ({ params }: { params: { scriptId: string } }) => {
-  const { scriptId } = params;
+const ScriptId = ({
+  params,
+}: {
+  params: { scriptId: string; courseId: string };
+}) => {
+  const { scriptId, courseId } = params;
   const router = useRouter();
+  const { data, isLoading, isError, error } = useFetchAssessmentList(scriptId);
+  const { data: assessmentDetails, isLoading: isAssessmentLoading } =
+    useFetchAssessmentDetails(scriptId);
+  let tableData = data || [];
+
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex lg:flex-row flex-col justify-between lg:items-center gap-7">
@@ -24,13 +36,17 @@ const ScriptId = ({ params }: { params: { scriptId: string } }) => {
           </div>
           <div className="flex flex-col gap-1">
             <h4 className="text-black lg:text-[17px] text-sm lg:font-semibold font-medium">
-              Advanced Business Studies
+              {isAssessmentLoading ? (
+                <div className="h-5 w-40 bg-gray-200 animate-pulse rounded" />
+              ) : (
+                assessmentDetails?.data?.description || "Assessment"
+              )}
             </h4>
           </div>
         </div>
         <div className="flex items-center gap-[14px]">
           <Link
-            href={"/upload-script"}
+            href={`/my-courses/${courseId}/${scriptId}/upload-script`}
             className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
                 "
           >
@@ -41,11 +57,19 @@ const ScriptId = ({ params }: { params: { scriptId: string } }) => {
           </Button>
         </div>
       </div>
-      {assessments ? (
+      {isLoading ? (
+        <div className="mt-10">
+          <ScriptsTableSkeleton />
+        </div>
+      ) : isError ? (
+        <div className="mt-10 text-red-500">
+          {error?.message || "Error loading scripts"}
+        </div>
+      ) : tableData && tableData.length > 0 ? (
         <div className="flex flex-col gap-[27px] mt-10">
           <DataTable
             columns={columns}
-            data={markedScriptsData}
+            data={tableData}
             searchKey="scriptUploaded"
             tableName="Recently marked scripts"
             getId={(row) => row.studentId}
@@ -58,7 +82,7 @@ const ScriptId = ({ params }: { params: { scriptId: string } }) => {
         <EmptyState
           image="/images/empty-state.svg"
           title="No Marked Script"
-          desc="You’ve not marked any script yet"
+          desc="You've not marked any script yet"
           link="/assessment"
           buttonText="Mark New Script"
           showIcon={false}
