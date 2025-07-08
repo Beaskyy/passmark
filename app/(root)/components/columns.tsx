@@ -5,6 +5,26 @@ import Image from "next/image";
 import { MarkedScript } from "@/lib/data";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Helper to format date
+function formatDate(dateString: string | null | undefined) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return date
+    .toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(",", "")
+    .replace(
+      /(\d{2}:\d{2}) (AM|PM)/,
+      (match, time, ampm) => `at ${time} ${ampm.toLowerCase()}`
+    );
+}
+
 export const columns: ColumnDef<MarkedScript>[] = [
   {
     id: "select",
@@ -51,9 +71,9 @@ export const columns: ColumnDef<MarkedScript>[] = [
       <div className="flex items-center gap-0.5">
         <Image
           src={`/images/${
-            row.original?.scriptUploaded?.split(".")[1] === "pdf"
+            row.original?.file_type === "pdf"
               ? "pdf"
-              : row.original?.scriptUploaded?.split(".")[1] === "jpg"
+              : row.original?.file_type === "jpg"
               ? "jpg"
               : "png"
           }.svg`}
@@ -62,8 +82,10 @@ export const columns: ColumnDef<MarkedScript>[] = [
           height={32}
         />
         <div>
-          <p className="font-medium">{row.original?.scriptUploaded}</p>
-          <small className="text-xs text-[#5C5C5C]">2.4 MB</small>
+          <p className="font-medium">{row.original?.file_name}</p>
+          <small className="text-xs text-[#5C5C5C]">
+            {(Number(row.original?.file_size) / 1024).toFixed(1)} KB
+          </small>
         </div>
       </div>
     ),
@@ -86,6 +108,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
+    cell: ({ row }) => row.original?.student?.student_number,
   },
   {
     accessorKey: "courseCode",
@@ -105,9 +128,10 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
+    cell: ({ row }) => row.original?.course?.code,
   },
   {
-    accessorKey: "dateMarked",
+    accessorKey: "created_at",
     header: ({ column }) => {
       return (
         <div
@@ -124,6 +148,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
+    cell: ({ row }) => formatDate(row.original?.created_at),
   },
   {
     accessorKey: "status",
@@ -185,7 +210,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
     },
     cell: ({ row }) => (
       <div className="flex gap-2">
-        {row.original?.actions?.map((action: string, index: number) => (
+        {(row.original?.actions || []).map((action: string, index: number) => (
           <div
             key={index}
             className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
