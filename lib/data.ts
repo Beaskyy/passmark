@@ -1,11 +1,34 @@
 export type MarkedScript = {
-  scriptUploaded: string;
-  studentId: number;
-  courseCode: string;
-  studentScore: string;
-  dateMarked: string;
+  script_id: string;
+  student_id: string;
+  student: {
+    student_id: string;
+    student_number: string;
+    full_name: string;
+  };
+  assessment_id: string;
+  assessment: {
+    assessment_id: string;
+    title: string;
+    description: string;
+  };
+  course_id: string;
+  course: {
+    course_id: string;
+    title: string;
+    code: string;
+    session: string;
+    description: string;
+  };
   status: string;
-  actions: string[];
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: string;
+  marked_at: string | null;
+  created_at: string;
+  updated_at: string;
+  actions?: string[];
 };
 
 export const links = [

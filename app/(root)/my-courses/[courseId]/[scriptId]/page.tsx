@@ -11,9 +11,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { useFetchAssessmentList } from "@/hooks/useFetchAssessmentList";
 import ScriptsTableSkeleton from "@/components/skeletons/ScriptsTableSkeleton";
 import { useFetchAssessmentDetails } from "@/hooks/useFetchAssessmentDetails";
+import { useFetchAssessmentScriptList } from "@/hooks/useFetchAssessmentScriptList";
 
 const ScriptId = ({
   params,
@@ -22,7 +22,7 @@ const ScriptId = ({
 }) => {
   const { scriptId, courseId } = params;
   const router = useRouter();
-  const { data, isLoading, isError, error } = useFetchAssessmentList(scriptId);
+  const { data, isLoading, isError, error } = useFetchAssessmentScriptList(scriptId)
   const { data: assessmentDetails, isLoading: isAssessmentLoading } =
     useFetchAssessmentDetails(scriptId);
   let tableData = data || [];
@@ -72,7 +72,7 @@ const ScriptId = ({
             data={tableData}
             searchKey="scriptUploaded"
             tableName="Recently marked scripts"
-            getId={(row) => row.studentId}
+            getId={(row) => row.student_id}
             onRowClick={(row: any) =>
               router.push(`/marked-scripts/${row.studentId}`)
             }

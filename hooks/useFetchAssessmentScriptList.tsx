@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { useAccount } from "@/providers/AccountProvider";
 import type { MarkedScript } from "@/lib/data";
 
 const fetchAssessmentScriptList = async (
   token: string,
-  organisationId: string
+  assessmentId: string
 ): Promise<MarkedScript[]> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/script/list/assessment/${organisationId}/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/script/list/assessment/${assessmentId}/`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -19,22 +18,28 @@ const fetchAssessmentScriptList = async (
     throw new Error("Failed to fetch assessment scripts");
   }
   const result = await response.json();
-  return result.data; // Adjust if your backend wraps the list differently
+  // Map backend response to MarkedScript type for the UI
+  return result.data.map((item: any) => ({
+    ...item,
+    scriptUploaded: item.file_name,
+    studentId: item.student?.student_number,
+    courseCode: item.course?.code,
+    dateMarked: item.marked_at,
+    actions: ["View Script", "approve"], // Add more actions as needed
+  }));
 };
 
-export const useFetchAssessmentScriptList = (organisationId?: string) => {
+export const useFetchAssessmentScriptList = (assessmentId?: string) => {
   const { data: session } = useSession();
-  const { user } = useAccount();
   const token = session?.accessToken;
-  const orgId = organisationId || user?.organisation?.org_id;
 
   return useQuery({
-    queryKey: ["assessmentScriptList", orgId],
+    queryKey: ["assessmentScriptList", assessmentId],
     queryFn: () => {
       if (!token) throw new Error("No access token");
-      if (!orgId) throw new Error("No organisation ID");
-      return fetchAssessmentScriptList(token, orgId);
+      if (!assessmentId) throw new Error("No assessment ID");
+      return fetchAssessmentScriptList(token, assessmentId);
     },
-    enabled: !!token && !!orgId,
+    enabled: !!token && !!assessmentId,
   });
 };
