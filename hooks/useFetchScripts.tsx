@@ -8,7 +8,7 @@ const getScripts = async (
   orgId: string
 ): Promise<MarkedScript[]> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/script/get/${orgId}/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/script/list/organisation/${orgId}/`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
