@@ -131,7 +131,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
     cell: ({ row }) => row.original?.course?.code,
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "marked_at",
     header: ({ column }) => {
       return (
         <div
@@ -148,7 +148,8 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
-    cell: ({ row }) => formatDate(row.original?.created_at),
+    cell: ({ row }) =>
+      formatDate(row.original?.marked_at || row.original?.created_at),
   },
   {
     accessorKey: "status",
@@ -198,7 +199,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="flex items-center gap-0.5 cursor-pointer"
         >
-          Status
+          Actions
           <Image
             src="/images/up-down-fill.svg"
             alt="up-down-fill"
@@ -208,19 +209,24 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
-    cell: ({ row }) => (
-      <div className="flex gap-2">
-        {(row.original?.actions || []).map((action: string, index: number) => (
-          <div
-            key={index}
-            className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
-          >
-            <p className="text-[#5C5C5C] font-medium text-sm tracking-[0.6px] leading-5 whitespace-nowrap">
-              {action}
-            </p>
-          </div>
-        ))}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const status = row.original?.status?.toLowerCase();
+      const actions =
+        status === "pending" ? ["View Script", "Approve"] : ["View Script"];
+      return (
+        <div className="flex gap-2">
+          {actions.map((action: string, index: number) => (
+            <div
+              key={index}
+              className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg"
+            >
+              <p className="text-[#5C5C5C] font-medium text-sm tracking-[0.6px] leading-5 whitespace-nowrap">
+                {action}
+              </p>
+            </div>
+          ))}
+        </div>
+      );
+    },
   },
 ];

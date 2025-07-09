@@ -37,9 +37,9 @@ export default function Home() {
           data={scripts}
           searchKey="scriptUploaded"
           tableName="Recently marked scripts"
-          getId={(row) => row.studentId}
+          getId={(row) => row.student_id}
           onRowClick={(row: MarkedScript) =>
-            router.push(`/marked-scripts/${row.studentId}`)
+            router.push(`/marked-scripts/${row.student_id}`)
           }
         />
       )}
