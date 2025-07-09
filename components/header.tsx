@@ -15,12 +15,13 @@ import {
 import { Navigation } from "./navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
+import { Skeleton } from "./ui/skeleton";
 
 export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
-  const { user } = useAccount();
+  const { user, isLoading } = useAccount();
 
   const handleLogout = async () => {
     try {
@@ -87,9 +88,15 @@ export const Header = () => {
                     className="absolute rounded-full object-contain"
                   />
                 </div>
-                <p className="text-sm font-medium tracking-[-0.6%]">
-                  {`${user?.firstname} ${user?.lastname}` || session?.user?.name || "User"}
-                </p>
+                <div className="text-sm font-medium tracking-[-0.6%]">
+                  {isLoading || !user ? (
+                    <Skeleton className="w-24 h-5" />
+                  ) : user.firstname && user.lastname ? (
+                    `${user.firstname} ${user.lastname}`
+                  ) : (
+                    session?.user?.name || "User"
+                  )}
+                </div>
               </div>
               <Image
                 src="/images/caret.svg"
