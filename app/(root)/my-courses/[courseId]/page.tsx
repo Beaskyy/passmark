@@ -45,29 +45,106 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useFetchAssessmentList } from "@/hooks/useFetchAssessmentList";
+import { DataTable } from "@/components/data-table";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { Row, Table } from "@tanstack/react-table";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 
-const formSchema = z.object({
-  title: z.string().min(1, "Course name is required"),
-  code: z.string().min(1, "Course code is required"),
-  session: z.string().min(1, "Session is required"),
-  description: z.string().optional(),
-});
+// Mock data for students (matching the image)
+const studentsData = [
+  {
+    id: "1",
+    name: "Nneka Chukwu",
+    studentId: "66277431",
+    dateAdded: "2023-02-21T15:05:00",
+  },
+  {
+    id: "2",
+    name: "Jide Kosoko",
+    studentId: "43397744",
+    dateAdded: "2023-08-03T00:10:00",
+  },
+  {
+    id: "3",
+    name: "Adebayo Salami",
+    studentId: "01906912",
+    dateAdded: "2023-02-21T15:05:00",
+  },
+  {
+    id: "4",
+    name: "Eze Chinedu",
+    studentId: "43397744",
+    dateAdded: "2023-01-01T13:49:00",
+  },
+  {
+    id: "5",
+    name: "Damilare Usman",
+    studentId: "52936567",
+    dateAdded: "2021-09-04T00:14:00",
+  },
+  {
+    id: "6",
+    name: "Jibike Alarape",
+    studentId: "21789057",
+    dateAdded: "2023-08-18T16:12:00",
+  },
+  {
+    id: "7",
+    name: "Amaka Eze",
+    studentId: "29103050",
+    dateAdded: "2023-01-11T13:49:00",
+  },
+];
 
-const getAssessmentTypeColors = (type: string) => {
-  switch (type.toLowerCase()) {
-    case "examination":
-      return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
-    case "test":
-      return { yearColor: "#FA7319", pillBg: "#FFF3EB" };
-    case "assignment":
-      return { yearColor: "#1FC16B", pillBg: "#E0FAEC" };
-    case "custom":
-    case "other":
-      return { yearColor: "#7D52F4", pillBg: "#EFEBFF" };
-    default:
-      return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
-  }
-};
+// Add Student type
+interface Student {
+  id: string;
+  name: string;
+  studentId: string;
+  dateAdded: string;
+}
+
+// Helper to get initials
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 1)
+    .toUpperCase();
+}
+
+// Helper to format date
+function formatDate(dateString: string) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return date
+    .toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(",", "")
+    .replace(
+      /(\d{2}:\d{2}) (AM|PM)/,
+      (match, time, ampm) => `at ${time} ${ampm.toLowerCase()}`
+    );
+}
+
+// Helper to get first name
+function getFirstName(name: string) {
+  return name.split(" ")[0];
+}
 
 const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
@@ -78,6 +155,115 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   const { mutate: editCourse, isPending: isEditPending } = useEditCourse();
   const [showEdit, setShowEdit] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+
+  // Move formSchema here
+  const formSchema = z.object({
+    title: z.string().min(1, "Course name is required"),
+    code: z.string().min(1, "Course code is required"),
+    session: z.string().min(1, "Session is required"),
+    description: z.string().optional(),
+  });
+
+  // Move getAssessmentTypeColors here
+  const getAssessmentTypeColors = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "examination":
+        return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
+      case "test":
+        return { yearColor: "#FA7319", pillBg: "#FFF3EB" };
+      case "assignment":
+        return { yearColor: "#1FC16B", pillBg: "#E0FAEC" };
+      case "custom":
+      case "other":
+        return { yearColor: "#7D52F4", pillBg: "#EFEBFF" };
+      default:
+        return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
+    }
+  };
+
+  const studentColumns = [
+    {
+      id: "select",
+      header: ({ table }: { table: Table<Student> }) => (
+        <Checkbox
+          checked={table.getIsAllRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+          aria-label="Select all"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
+        />
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
+        />
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: () => (
+        <div className="flex items-center gap-0.5 cursor-pointer">
+          Student Name
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+          />
+        </div>
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#C2D3F5] flex items-center justify-center text-lg font-semibold text-[#3A5B8C]">
+            {getInitials(row.original.name)}
+          </div>
+          <span className="font-medium text-[#171717]">
+            {row.original.name}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "studentId",
+      header: () => <div className="flex items-center gap-0.5 cursor-pointer">Student&apos;s ID  <Image
+      src="/images/up-down-fill.svg"
+      alt="up-down-fill"
+      width={20}
+      height={20}
+    /></div>,
+      cell: ({ row }: { row: Row<Student> }) => (
+        <span className="text-[#171717]">{row.original.studentId}</span>
+      ),
+    },
+    {
+      accessorKey: "dateAdded",
+      header: () => <div>Date Added</div>,
+      cell: ({ row }: { row: Row<Student> }) => (
+        <span className="text-[#171717]">
+          {formatDate(row.original.dateAdded)}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div>Actions</div>,
+      cell: ({ row }: { row: Row<Student> }) => (
+        <button
+          className="bg-white border border-[#F63636] text-[#F63636] rounded-lg px-4 py-1.5 font-medium text-sm hover:bg-[#FFF0F0] transition-all"
+          onClick={() => {
+            setStudentToDelete(row.original);
+            setDeleteDialogOpen(true);
+          }}
+        >
+          Delete Student
+        </button>
+      ),
+    },
+  ];
 
   const handleDelete = (course_id: string) => {
     deleteCourse(
@@ -194,7 +380,9 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuLabel
-                onClick={() => router.push(`/my-courses/${courseId}/edit-students`)}
+                onClick={() =>
+                  router.push(`/my-courses/${courseId}/edit-students`)
+                }
                 className="cursor-pointer"
               >
                 <span className="lg:text-sm text-xs font-medium text-[#333333]">
@@ -341,7 +529,38 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               <div>Error - {assessmentError.message}</div>
             ) : assessmentList && assessmentList.length > 0 ? (
               <div className="flex flex-col gap-[27px]">
-                <div className="mt-10 grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px]">
+                <div className="mt-10">
+                  <Link
+                    href="marked-scripts"
+                    className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm"
+                  >
+                    <div className="flex flex-col lg:gap-2">
+                      <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
+                        My Students
+                      </p>
+                      <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
+                        2,343 Students
+                      </h4>
+                    </div>
+                    <Image
+                      src="/images/book-2.svg"
+                      alt="book"
+                      width={44}
+                      height={44}
+                      className="lg:size-11 size-8"
+                    />
+                  </Link>
+                </div>
+                <div className="mt-8">
+                  <DataTable
+                    columns={studentColumns}
+                    data={studentsData}
+                    searchKey="name"
+                    tableName="Student list"
+                    getId={(row) => row.id}
+                  />
+                </div>
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px]">
                   {assessmentList.map(
                     ({ assessment_id, title, description }) => {
                       // Determine type from title or description
@@ -397,6 +616,60 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           </>
         )}
       </>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-[400px] rounded-2xl p-8 text-center">
+          <div className="flex flex-col items-center">
+            <div className="bg-[#FFF4E5] rounded-full w-12 h-12 flex items-center justify-center mb-4">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9Z"
+                  stroke="#FFB020"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M12 9v4m0 4h.01"
+                  stroke="#FFB020"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <DialogTitle className="text-xl font-semibold mb-2">
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription className="mb-6 text-[#8E8E8E]">
+              Kindly confirm that you want to delete{" "}
+              {studentToDelete
+                ? getFirstName(studentToDelete.name)
+                : "this student"}{" "}
+              from your student list?
+            </DialogDescription>
+            <div className="flex gap-3 w-full justify-center">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="w-1/2 border-none bg-[#F5F8FF] text-[#335CFF] hover:bg-[#E6EEFF]"
+                >
+                  No, Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                className="w-1/2 bg-[#335CFF] text-white hover:bg-[#2346A0]"
+                onClick={() => {
+                  // Here you would handle the actual delete logic
+                  setDeleteDialogOpen(false);
+                  setStudentToDelete(null);
+                }}
+              >
+                Yes, Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
