@@ -20,7 +20,6 @@ const Result = () => {
   const images = [
     "/images/result.svg",
     "/images/landscape.svg",
-    // Add more image URLs as needed
   ];
 
   return (
