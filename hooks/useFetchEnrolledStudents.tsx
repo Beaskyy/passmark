@@ -8,7 +8,7 @@ export type EnrolledStudent = {
   course_id: string;
   student_number: string;
   full_name: string;
-  // Add other fields as needed
+  created_at: string; 
 };
 
 const fetchEnrolledStudents = async (

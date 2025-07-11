@@ -56,52 +56,8 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-
-// Mock data for students (matching the image)
-const studentsData = [
-  {
-    id: "1",
-    name: "Nneka Chukwu",
-    studentId: "66277431",
-    dateAdded: "2023-02-21T15:05:00",
-  },
-  {
-    id: "2",
-    name: "Jide Kosoko",
-    studentId: "43397744",
-    dateAdded: "2023-08-03T00:10:00",
-  },
-  {
-    id: "3",
-    name: "Adebayo Salami",
-    studentId: "01906912",
-    dateAdded: "2023-02-21T15:05:00",
-  },
-  {
-    id: "4",
-    name: "Eze Chinedu",
-    studentId: "43397744",
-    dateAdded: "2023-01-01T13:49:00",
-  },
-  {
-    id: "5",
-    name: "Damilare Usman",
-    studentId: "52936567",
-    dateAdded: "2021-09-04T00:14:00",
-  },
-  {
-    id: "6",
-    name: "Jibike Alarape",
-    studentId: "21789057",
-    dateAdded: "2023-08-18T16:12:00",
-  },
-  {
-    id: "7",
-    name: "Amaka Eze",
-    studentId: "29103050",
-    dateAdded: "2023-01-11T13:49:00",
-  },
-];
+import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
+import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
 
 // Add Student type
 interface Student {
@@ -157,6 +113,8 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const { mutate: deleteEnrollment, isPending: isDeleting } =
+    useDeleteEnrollment();
 
   // Move formSchema here
   const formSchema = z.object({
@@ -205,14 +163,22 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     },
     {
       accessorKey: "name",
-      header: () => (
-        <div className="flex items-center gap-0.5 cursor-pointer">
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Student Name
           <Image
             src="/images/up-down-fill.svg"
             alt="up-down-fill"
             width={20}
             height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
           />
         </div>
       ),
@@ -229,19 +195,50 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     },
     {
       accessorKey: "studentId",
-      header: () => <div className="flex items-center gap-0.5 cursor-pointer">Student&apos;s ID  <Image
-      src="/images/up-down-fill.svg"
-      alt="up-down-fill"
-      width={20}
-      height={20}
-    /></div>,
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Student&apos;s ID
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
+          />
+        </div>
+      ),
       cell: ({ row }: { row: Row<Student> }) => (
         <span className="text-[#171717]">{row.original.studentId}</span>
       ),
     },
     {
       accessorKey: "dateAdded",
-      header: () => <div>Date Added</div>,
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Date Added
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
+          />
+        </div>
+      ),
       cell: ({ row }: { row: Row<Student> }) => (
         <span className="text-[#171717]">
           {formatDate(row.original.dateAdded)}
@@ -293,6 +290,23 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     isError: isAssessmentError,
     error: assessmentError,
   } = useFetchAssessmentList(courseId);
+
+  // Fetch enrolled students
+  const {
+    data: enrolledStudents,
+    isLoading: isStudentsLoading,
+    isError: isStudentsError,
+    error: studentsError,
+  } = useFetchEnrolledStudents(courseId);
+
+  // Map API data to Student[] for the table
+  const studentsData: Student[] =
+    enrolledStudents?.map((s) => ({
+      id: s.student_id,
+      name: s.full_name,
+      studentId: s.student_number,
+      dateAdded: s.created_at, // use created_at for date added
+    })) ?? [];
 
   // Setup form with default values from courseDetails
   const form = useForm({
@@ -552,13 +566,23 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                   </Link>
                 </div>
                 <div className="mt-8">
-                  <DataTable
-                    columns={studentColumns}
-                    data={studentsData}
-                    searchKey="name"
-                    tableName="Student list"
-                    getId={(row) => row.id}
-                  />
+                  {isStudentsLoading ? (
+                    <div className="text-center py-8 text-[#8C8C8C]">
+                      Loading students...
+                    </div>
+                  ) : isStudentsError ? (
+                    <div className="text-center py-8 text-[#F63636]">
+                      {studentsError?.message || "Failed to load students."}
+                    </div>
+                  ) : (
+                    <DataTable
+                      columns={studentColumns}
+                      data={studentsData}
+                      searchKey="name"
+                      tableName="Student list"
+                      getId={(row) => row.id}
+                    />
+                  )}
                 </div>
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px]">
                   {assessmentList.map(
@@ -617,30 +641,23 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
         )}
       </>
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-[400px] rounded-2xl p-8 text-center">
+        <DialogContent
+          className="max-w-[357px] px-5 py-4 text-center"
+          style={{ borderRadius: "20px" }}
+        >
           <div className="flex flex-col items-center">
-            <div className="bg-[#FFF4E5] rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9Z"
-                  stroke="#FFB020"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 9v4m0 4h.01"
-                  stroke="#FFB020"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="bg-[#FEEDE1] rounded-[10px] p-2 w-10 h-10 flex items-center justify-center mb-4">
+              <Image
+                src="/images/alert.svg"
+                alt="alert"
+                width={40}
+                height={40}
+              />
             </div>
-            <DialogTitle className="text-xl font-semibold mb-2">
+            <DialogTitle className="text-base text-[#171717] font-semibold mb-2">
               Are you sure?
             </DialogTitle>
-            <DialogDescription className="mb-6 text-[#8E8E8E]">
+            <DialogDescription className="text-sm mb-6 text-[#8C8C8C]">
               Kindly confirm that you want to delete{" "}
               {studentToDelete
                 ? getFirstName(studentToDelete.name)
@@ -651,20 +668,42 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               <DialogClose asChild>
                 <Button
                   variant="outline"
-                  className="w-1/2 border-none bg-[#F5F8FF] text-[#335CFF] hover:bg-[#E6EEFF]"
+                  className="w-1/2 border-none  lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
                 >
                   No, Cancel
                 </Button>
               </DialogClose>
               <Button
-                className="w-1/2 bg-[#335CFF] text-white hover:bg-[#2346A0]"
+                className="w-1/2 bg-[#335CFF] hover:bg-[#2346A0]flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium"
+                disabled={isDeleting}
                 onClick={() => {
-                  // Here you would handle the actual delete logic
-                  setDeleteDialogOpen(false);
-                  setStudentToDelete(null);
+                  if (!studentToDelete) return;
+                  deleteEnrollment(
+                    {
+                      organisation_id: organisation_id,
+                      course_id: courseId,
+                      student_id: studentToDelete.id,
+                    },
+                    {
+                      onSuccess: () => {
+                        toast.success("Student deleted successfully");
+                        setDeleteDialogOpen(false);
+                        setStudentToDelete(null);
+                        // Refetch students
+                        queryClient.invalidateQueries({
+                          queryKey: ["enrolledStudents", courseId],
+                        });
+                      },
+                      onError: (error: any) => {
+                        toast.error(
+                          error.message || "Failed to delete student"
+                        );
+                      },
+                    }
+                  );
                 }}
               >
-                Yes, Delete
+                {isDeleting ? "Deleting..." : "Yes, Delete"}
               </Button>
             </div>
           </div>
