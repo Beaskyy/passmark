@@ -60,6 +60,7 @@ interface DataTableProps<TData, TValue> {
   tableName: string;
   getId: (row: TData) => string | number;
   onRowClick?: (row: TData) => void;
+  meta?: any; // Allow passing meta for table.options.meta
 }
 
 export function DataTable<TData, TValue>({
@@ -69,6 +70,7 @@ export function DataTable<TData, TValue>({
   tableName,
   getId,
   onRowClick,
+  meta,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -133,6 +135,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
     },
+    meta, // Pass meta to table instance
   });
 
   const pageSize = table.getState().pagination.pageSize;
