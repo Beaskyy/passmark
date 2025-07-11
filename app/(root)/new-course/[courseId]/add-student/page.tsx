@@ -9,6 +9,9 @@ import { useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import { Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useCreateBulkEnrollment } from "@/hooks/useCreateBulkEnrollment";
+import { useAccount } from "@/providers/AccountProvider";
+import { toast } from "sonner";
 
 // Define the type for fileObj
 interface FileObj {
@@ -23,6 +26,9 @@ const AddStudents = () => {
   const [showAddBulk, setShowAddBulk] = useState(false);
   const [fileObj, setFileObj] = useState<FileObj | null>(null);
   const { courseId } = useParams();
+  const { user } = useAccount();
+  const { mutate: createBulkEnrollment, isPending: isUploadingBulk } =
+    useCreateBulkEnrollment();
 
   const handleFileSelect = (selectedFile: File) => {
     setFileObj({
@@ -56,6 +62,30 @@ const AddStudents = () => {
 
   const handleDelete = () => {
     setFileObj(null);
+  };
+
+  const handleContinue = () => {
+    if (!fileObj || fileObj.status !== "completed") return;
+    if (!courseId || !user?.organisation?.org_id) {
+      toast.error("Missing course or organisation ID");
+      return;
+    }
+    createBulkEnrollment(
+      {
+        course_id: courseId as string,
+        organisation_id: user.organisation.org_id,
+        students_csv: fileObj.file,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Bulk enrollment successful");
+          router.push(`/my-courses/${courseId}`);
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Bulk enrollment failed");
+        },
+      }
+    );
   };
 
   return (
@@ -194,8 +224,16 @@ const AddStudents = () => {
                     </div>
                   )}
                 </div>
-                <Button className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10">
-                  Continue
+                <Button
+                  className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+                  onClick={handleContinue}
+                  disabled={
+                    !fileObj ||
+                    fileObj.status !== "completed" ||
+                    isUploadingBulk
+                  }
+                >
+                  {isUploadingBulk ? "Uploading..." : "Continue"}
                 </Button>
               </div>
             </div>
