@@ -184,7 +184,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
       ),
       cell: ({ row }: { row: Row<Student> }) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#C2D3F5] flex items-center justify-center text-lg font-semibold text-[#3A5B8C]">
+          <div className="w-8 h-8 rounded-full bg-[#C0D5FF] flex items-center justify-center text-sm font-medium text-[#122368]">
             {getInitials(row.original.name)}
           </div>
           <span className="font-medium text-[#171717]">
