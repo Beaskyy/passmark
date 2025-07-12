@@ -113,11 +113,10 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
-  const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
   const { mutate: deleteEnrollment, isPending: isDeleting } =
     useDeleteEnrollment();
 
-  // formSchema here
+  // Move formSchema here
   const formSchema = z.object({
     title: z.string().min(1, "Course name is required"),
     code: z.string().min(1, "Course code is required"),
@@ -125,7 +124,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     description: z.string().optional(),
   });
 
-  // getAssessmentTypeColors here
+  // Move getAssessmentTypeColors here
   const getAssessmentTypeColors = (type: string) => {
     switch (type.toLowerCase()) {
       case "examination":
@@ -264,15 +263,8 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   ];
 
   const handleDelete = (course_id: string) => {
-    setCourseToDelete(course_id);
-    setDropdownOpen(false);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (!courseToDelete) return;
-
     deleteCourse(
-      { course_id: courseToDelete },
+      { course_id },
       {
         onSuccess: (data) => {
           toast.success(data.message || "Course deleted successfully");
@@ -377,13 +369,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           </div>
         </div>
         <div className="flex items-center gap-[14px]">
-          <Link
-            href={`/my-courses/${courseId}/assessments/create`}
-            className="flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
-                "
-          >
-            <span>Create Assessment</span>
-          </Link>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger className="lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium w-[122px] hover:bg-[#F0F3FF] hover:text-primary">
               More Options
@@ -403,12 +388,12 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               <DropdownMenuSeparator />
               <DropdownMenuLabel
                 onClick={() =>
-                  router.push(`/my-courses/${courseId}/view-students`)
+                  router.push(`/my-courses/${courseId}/edit-students`)
                 }
                 className="cursor-pointer"
               >
                 <span className="lg:text-sm text-xs font-medium text-[#333333]">
-                  View Student
+                  Edit Student
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -551,59 +536,56 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               <div>Error - {assessmentError.message}</div>
             ) : (
               <div className="flex flex-col gap-[27px]">
-                {assessmentList && assessmentList.length > 0 ? (
-                  <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px] mt-10">
-                    {assessmentList.map(
-                      ({ assessment_id, title, description }) => {
-                        // Determine type from title or description
-                        let type = "other";
-                        if (/exam/i.test(title)) type = "examination";
-                        else if (/test/i.test(title)) type = "test";
-                        else if (/assign/i.test(title)) type = "assignment";
-                        else if (/custom|other/i.test(title)) type = "custom";
-                        const { yearColor, pillBg } =
-                          getAssessmentTypeColors(type);
-                        return (
-                          <div
-                            key={assessment_id}
-                            className="relative py-[22px] px-[18px] rounded-[14px] min-h-[57px] shadow-sm hover:shadow-md bg-white overflow-hidden cursor-pointer"
-                            onClick={() =>
-                              router.push(
-                                `/my-courses/${courseId}/${assessment_id}`
-                              )
-                            }
-                          >
-                            <div className="flex justify-between items-center gap-1">
-                              <h4 className="lg:text-[15px] text-xs text-[#474545] lg:font-semibold font-medium">
-                                {description}
-                              </h4>
-                              <div className="flex items-center gap-1.5">
-                                <div
-                                  className="h-5 py-0.5 px-2 text-xs font-medium rounded-lg w-fit"
-                                  style={{
-                                    backgroundColor: pillBg,
-                                    color: yearColor,
-                                  }}
-                                >
-                                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                ) : (
-                  <EmptyState
-                    image="/images/empty-state.svg"
-                    title="No Assessment"
-                    desc="You've not added any assessment yet"
-                    link={`/my-courses/${courseId}/assessments/create`}
-                    buttonText="Create Assessment"
-                    showIcon={false}
-                  />
-                )}
+                <div className="mt-10">
+                  <Link
+                    href="marked-scripts"
+                    className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm"
+                  >
+                    <div className="flex flex-col lg:gap-2">
+                      <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
+                        My Students
+                      </p>
+                      <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
+                        {studentsData?.length} Student{studentsData?.length === 1  ? "" : "s"}
+                      </h4>
+                    </div>
+                    <Image
+                      src="/images/book-2.svg"
+                      alt="book"
+                      width={44}
+                      height={44}
+                      className="lg:size-11 size-8"
+                    />
+                  </Link>
+                </div>
+                <div className="mt-8">
+                  {isStudentsLoading ? (
+                    <div className="text-center py-8 text-[#8C8C8C]">
+                      Loading students...
+                    </div>
+                  ) : isStudentsError ? (
+                    <div className="text-center py-8 text-[#F63636]">
+                      {studentsError?.message || "Failed to load students."}
+                    </div>
+                  ) : studentsData.length > 0 ? (
+                    <DataTable
+                      columns={studentColumns}
+                      data={studentsData}
+                      searchKey="name"
+                      tableName="Student list"
+                      getId={(row) => row.id}
+                    />
+                  ) : (
+                    <EmptyState
+                      image="/images/empty-state.svg"
+                      title="No student"
+                      desc="You've not added any student"
+                      link={`/my-courses/${courseId}/edit-students`}
+                      buttonText="Add student"
+                      showIcon={false}
+                    />
+                  )}
+                </div>
               </div>
             )}
           </>
@@ -627,7 +609,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               Are you sure?
             </DialogTitle>
             <DialogDescription className="text-sm mb-6 text-[#8C8C8C]">
-              Kindly confirm that you want to delete{" "}
+              Kindly confirm that you want to delete
               {studentToDelete
                 ? getFirstName(studentToDelete.name)
                 : "this student"}{" "}
@@ -673,52 +655,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                 }}
               >
                 {isDeleting ? "Deleting..." : "Yes, Delete"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Course Delete Confirmation Dialog */}
-      <Dialog
-        open={!!courseToDelete}
-        onOpenChange={(open) => !open && setCourseToDelete(null)}
-      >
-        <DialogContent
-          className="max-w-[357px] px-5 py-4 text-center"
-          style={{ borderRadius: "20px" }}
-        >
-          <div className="flex flex-col items-center">
-            <div className="bg-[#FEEDE1] rounded-[10px] p-2 w-10 h-10 flex items-center justify-center mb-4">
-              <Image
-                src="/images/alert.svg"
-                alt="alert"
-                width={40}
-                height={40}
-              />
-            </div>
-            <DialogTitle className="text-base text-[#171717] font-semibold mb-2">
-              Are you sure?
-            </DialogTitle>
-            <DialogDescription className="text-sm mb-6 text-[#8C8C8C]">
-              Kindly confirm that you want to delete this course? This action
-              cannot be undone.
-            </DialogDescription>
-            <div className="flex gap-3 w-full justify-center">
-              <DialogClose asChild>
-                <Button
-                  variant="outline"
-                  className="w-1/2 border-none  lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
-                >
-                  No, Cancel
-                </Button>
-              </DialogClose>
-              <Button
-                className="w-1/2 bg-[#335CFF] hover:bg-[#2346A0] flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium"
-                disabled={isPending}
-                onClick={handleDeleteConfirm}
-              >
-                {isPending ? "Deleting..." : "Yes, Delete"}
               </Button>
             </div>
           </div>

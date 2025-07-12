@@ -92,37 +92,46 @@ const NewStudent = () => {
 
   const handleStudentBlur = async (index: number) => {
     const student = students[index];
-    // Only create if both fields are filled and not already created
+    // Only create if both fields are filled, not already created, and not the last empty form
     if (student.id.trim() && student.name.trim()) {
       if (!student.student_id) {
-        setIsSubmitting(true);
-        try {
-          const response = await createStudent.mutateAsync({
-            course_id: courseId as string,
-            student: {
-              student_number: student.id,
-              full_name: student.name,
-            },
-          });
-          // Update the student with their server-generated ID
-          let newStudents = [...students];
-          newStudents[index] = {
-            ...student,
-            student_id: response.data?.student_id || response.student_id,
-          };
-          // If there is no empty student form at the end, add one
-          const last = newStudents[newStudents.length - 1];
-          if (last.id.trim() && last.name.trim()) {
-            newStudents = [...newStudents, { id: "", name: "", error: {} }];
+        // Check if this is the last student and if it's empty
+        const isLastStudent = index === students.length - 1;
+        const lastStudent = students[students.length - 1];
+        const isLastEmpty =
+          isLastStudent && !lastStudent.id.trim() && !lastStudent.name.trim();
+
+        // Only auto-create if it's not the last empty form
+        if (!isLastEmpty) {
+          setIsSubmitting(true);
+          try {
+            const response = await createStudent.mutateAsync({
+              course_id: courseId as string,
+              student: {
+                student_number: student.id,
+                full_name: student.name,
+              },
+            });
+            // Update the student with their server-generated ID
+            let newStudents = [...students];
+            newStudents[index] = {
+              ...student,
+              student_id: response.data?.student_id || response.student_id,
+            };
+            // If there is no empty student form at the end, add one
+            const last = newStudents[newStudents.length - 1];
+            if (last.id.trim() && last.name.trim()) {
+              newStudents = [...newStudents, { id: "", name: "", error: {} }];
+            }
+            setStudents(newStudents);
+            // toast.success("Student added successfully");
+          } catch (error) {
+            toast.error(
+              error instanceof Error ? error.message : "Failed to add student"
+            );
+          } finally {
+            setIsSubmitting(false);
           }
-          setStudents(newStudents);
-          // toast.success("Student added successfully");
-        } catch (error) {
-          toast.error(
-            error instanceof Error ? error.message : "Failed to add student"
-          );
-        } finally {
-          setIsSubmitting(false);
         }
       } else {
         // If student_id exists, update the student
@@ -208,37 +217,37 @@ const NewStudent = () => {
   };
 
   const handleSubmit = async () => {
-    // Find all new students (no student_id, both fields filled)
-    const newStudents = students.filter(
-      (student) =>
-        !student.student_id && student.id.trim() && student.name.trim()
-    );
+    // Check if the last student form has data but hasn't been saved
+    const lastStudent = students[students.length - 1];
+    const hasUnsavedData =
+      lastStudent &&
+      !lastStudent.student_id &&
+      lastStudent.id.trim() &&
+      lastStudent.name.trim();
 
-    // If there are no new students to create, just redirect
-    if (newStudents.length === 0) {
-      router.push(`/my-courses/${courseId}`);
-      return;
-    }
-
-    // If there are new students to create, create them
-    setIsSubmitting(true);
-    try {
-      for (const student of newStudents) {
+    if (hasUnsavedData) {
+      // Create the last student if it has data but hasn't been saved
+      setIsSubmitting(true);
+      try {
         await createStudent.mutateAsync({
           course_id: courseId as string,
           student: {
-            student_number: student.id,
-            full_name: student.name,
+            student_number: lastStudent.id,
+            full_name: lastStudent.name,
           },
         });
+        toast.success("Student added successfully");
+        router.push(`/my-courses/${courseId}`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to add student"
+        );
+      } finally {
+        setIsSubmitting(false);
       }
-      toast.success("Students added successfully");
+    } else {
+      // No unsaved data, just proceed to next step
       router.push(`/my-courses/${courseId}`);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to add student"
-      );
-      setIsSubmitting(false);
     }
   };
 
@@ -354,8 +363,9 @@ const NewStudent = () => {
       <Button
         className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
         onClick={handleSubmit}
+        disabled={isSubmitting}
       >
-        Continue
+        {isSubmitting ? "Saving..." : "Continue"}
       </Button>
     </main>
   );

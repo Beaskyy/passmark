@@ -92,7 +92,7 @@ export const Header = () => {
                   {isLoading || !user ? (
                     <Skeleton className="w-24 h-5" />
                   ) : user.firstname && user.lastname ? (
-                    `${user.firstname} ${user.lastname}`
+                    `${user.firstname}`
                   ) : (
                     session?.user?.name || "User"
                   )}
