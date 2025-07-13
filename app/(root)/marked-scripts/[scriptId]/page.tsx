@@ -17,10 +17,7 @@ const Result = () => {
   // Lightbox state and images array
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const images = [
-    "/images/result.svg",
-    "/images/landscape.svg",
-  ];
+  const images = ["/images/result.svg", "/images/landscape.svg"];
 
   return (
     <div className="relative">

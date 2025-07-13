@@ -20,7 +20,7 @@ const MarkedScripts = () => {
   const organisationId = user?.organisation?.org_id;
   const { data = [], isLoading } = useFetchScripts(organisationId);
   const approvedCount = data.filter(
-    (s) => s.status.toLowerCase() === "approved"
+    (s) => s.status.toLowerCase() === "completed"
   ).length;
   const pendingCount = data.filter(
     (s) => s.status.toLowerCase() === "pending"
