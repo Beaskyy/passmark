@@ -250,7 +250,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
       header: () => <div>Actions</div>,
       cell: ({ row }: { row: Row<Student> }) => (
         <button
-          className="bg-white border border-[#F63636] text-[#F63636] rounded-lg px-4 py-1.5 font-medium text-sm hover:bg-[#FFF0F0] transition-all"
+          className="bg-white border border-[#EBEBEB] text-[#F63636] rounded-lg px-4 py-1.5 font-medium text-sm hover:bg-[#FFF0F0] transition-all drop-shadow-sm"
           onClick={() => {
             setStudentToDelete(row.original);
             setDeleteDialogOpen(true);
@@ -546,7 +546,8 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                         My Students
                       </p>
                       <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
-                        {studentsData?.length} Student{studentsData?.length === 1  ? "" : "s"}
+                        {studentsData?.length} Student
+                        {studentsData?.length === 1 ? "" : "s"}
                       </h4>
                     </div>
                     <Image
@@ -574,6 +575,8 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                       searchKey="name"
                       tableName="Student list"
                       getId={(row) => row.id}
+                      showDeleteStudent={true}
+                      showStatusFilter={false}
                     />
                   ) : (
                     <EmptyState

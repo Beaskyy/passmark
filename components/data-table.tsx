@@ -50,6 +50,7 @@ import {
   ChevronsRight,
   Ellipsis,
   Search,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -61,6 +62,8 @@ interface DataTableProps<TData, TValue> {
   getId: (row: TData) => string | number;
   onRowClick?: (row: TData) => void;
   meta?: any; // Allow passing meta for table.options.meta
+  showStatusFilter?: boolean; // New prop
+  showDeleteStudent?: boolean; // New prop
 }
 
 export function DataTable<TData, TValue>({
@@ -71,6 +74,8 @@ export function DataTable<TData, TValue>({
   getId,
   onRowClick,
   meta,
+  showStatusFilter = true, // Default true
+  showDeleteStudent = false, // Default false
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -153,25 +158,28 @@ export function DataTable<TData, TValue>({
           </h4>
           <div className="flex lg:flex-row flex-col lg:items-center gap-[13px] w-full lg:w-auto">
             <div className="flex items-center gap-[13px]">
-              <Select
-                value={
-                  (table.getColumn("status")?.getFilterValue() as string) ?? ""
-                }
-                onValueChange={(value) => {
-                  table
-                    .getColumn("status")
-                    ?.setFilterValue(value === "all" ? "" : value);
-                }}
-              >
-                <SelectTrigger className="min-w-[111px] w-full border border-[#EBEBEB] shadow-sm text-sm text-[#5C5C5C] h-9 rounded-[10px]">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
+              {showStatusFilter && (
+                <Select
+                  value={
+                    (table.getColumn("status")?.getFilterValue() as string) ??
+                    ""
+                  }
+                  onValueChange={(value) => {
+                    table
+                      .getColumn("status")
+                      ?.setFilterValue(value === "all" ? "" : value);
+                  }}
+                >
+                  <SelectTrigger className="min-w-[111px] w-full border border-[#EBEBEB] shadow-sm text-sm text-[#5C5C5C] h-9 rounded-[10px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               <div
                 className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85"
                 onClick={handleExport}
@@ -198,6 +206,14 @@ export function DataTable<TData, TValue>({
               />
               <Search className="absolute right-2 top-2 text-[#5C5C5C] size-5 cursor-pointer" />
             </div>
+            {showDeleteStudent && (
+              <div className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85">
+                <Trash2 className="size-5 text-[#5C5C5C]" />
+                <p className="text-sm text-[#5C5C5C] font-medium">
+                  Delete Student
+                </p>
+              </div>
+            )}
           </div>
         </div>
         <Table>
