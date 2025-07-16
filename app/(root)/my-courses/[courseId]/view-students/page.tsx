@@ -375,18 +375,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[183px] py-3">
               <DropdownMenuLabel
-                onClick={() => {
-                  setShowEdit(true);
-                  setDropdownOpen(false);
-                }}
-                className="cursor-pointer"
-              >
-                <span className="lg:text-sm text-xs font-medium text-[#333333]">
-                  Edit Course Information
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel
                 onClick={() =>
                   router.push(`/my-courses/${courseId}/edit-students`)
                 }
@@ -396,15 +384,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                   Edit Student
                 </span>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleDelete(courseId)}
-                className="cursor-pointer"
-              >
-                <span className="text-sm font-medium text-[#F11B1B]">
-                  Delete Course
-                </span>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
