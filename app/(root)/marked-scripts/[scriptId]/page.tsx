@@ -6,9 +6,16 @@ import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useFetchScript } from "@/hooks/useFetchScript";
+import { useParams } from "next/navigation";
 
 const Result = () => {
   const router = useRouter();
+  const params = useParams();
+  const scriptId = Array.isArray(params?.scriptId)
+    ? params.scriptId[0]
+    : params?.scriptId;
+  const { data: script, isLoading, error } = useFetchScript(scriptId);
   const [number1a, setNumber1a] = useState(10);
   const [number1b, setNumber1b] = useState(10);
   const [number1c, setNumber1c] = useState(10);
@@ -21,6 +28,41 @@ const Result = () => {
 
   return (
     <div className="relative">
+      {/* Script fetch demo */}
+      {isLoading && (
+        <div className="lg:w-[770px] w-full mx-auto mt-8">
+          <div className="flex flex-col justify-center items-center gap-8 text-center animate-pulse">
+            <div className="flex flex-col gap-[17px] items-center">
+              <div className="rounded-full bg-gray-200 h-24 w-24 mb-2" />
+              <div className="h-6 w-32 bg-gray-200 rounded mb-2" />
+            </div>
+            <div className="flex flex-col justify-center items-center bg-white rounded-[14.74px] p-[12.89px] gap-[22.11px] w-full">
+              <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
+              <div className="grid md:grid-cols-2 grid-cols-1 gap-[16.58px] w-full">
+                <div className="relative w-[363.82px] h-[336.56px] rounded-[12.89px] bg-gray-200" />
+                <div className="flex flex-col gap-[15.17px] border border-[#F5F5F5] p-[13.82px] rounded-[12.89px] text-start w-full">
+                  <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
+                  <div className="h-4 w-full bg-gray-100 rounded mb-1" />
+                  <div className="h-4 w-5/6 bg-gray-100 rounded mb-1" />
+                  <div className="h-4 w-2/3 bg-gray-100 rounded mb-1" />
+                  <div className="h-4 w-1/2 bg-gray-100 rounded" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#F0F5FF] p-3.5 rounded-xl w-full flex items-center gap-2">
+              <div className="flex gap-2 items-center">
+                <div className="bg-gray-200 rounded-full h-6 w-6" />
+                <div className="flex flex-col gap-1.5 text-start">
+                  <div className="h-4 w-24 bg-gray-200 rounded mb-1" />
+                  <div className="h-3 w-64 bg-gray-100 rounded" />
+                </div>
+              </div>
+              <div className="w-[92px] h-[34px] bg-gray-200 rounded-[10px] ml-auto" />
+            </div>
+          </div>
+        </div>
+      )}
+      {error && <div>Error loading script</div>}
       <main className="lg:px-[108px] md:px-[20] p-5 overflow-y-auto pb-40">
         <div className="flex justify-between lg:items-center gap-4 mt-2">
           <Image
@@ -51,24 +93,33 @@ const Result = () => {
                       className="relative w-[363.82px] h-[336.56px] rounded-[12.89px] cursor-pointer group"
                       onClick={() => {
                         setLightboxOpen(true);
-                        setLightboxIndex(0);
                       }}
                       tabIndex={0}
-                      aria-label="Open image 1"
+                      aria-label="Open script file"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           setLightboxOpen(true);
-                          setLightboxIndex(0);
                         }
                       }}
                       role="button"
                     >
-                      <Image
-                        src={images[0]}
-                        alt={`result-script-0`}
-                        fill
-                        className="absolute bg-cover rounded-[12.89px] group-hover:opacity-80 transition-opacity"
-                      />
+                      {script && script.file_type === "application/pdf" ? (
+                        <iframe
+                          src={script.file_url}
+                          title="Script PDF"
+                          width="100%"
+                          height="100%"
+                          className="absolute rounded-[12.89px] bg-white"
+                          style={{ minHeight: 0, minWidth: 0, border: 0 }}
+                        />
+                      ) : script && script.file_url ? (
+                        <Image
+                          src={script.file_url}
+                          alt={script.file_name || "script-image"}
+                          fill
+                          className="absolute bg-cover rounded-[12.89px] group-hover:opacity-80 transition-opacity"
+                        />
+                      ) : null}
                       <span className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
                         Click to enlarge
                       </span>
@@ -286,7 +337,7 @@ const Result = () => {
       </main>
 
       {/* Lightbox Modal - always rendered at root level */}
-      {lightboxOpen && (
+      {lightboxOpen && script && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
           onClick={() => setLightboxOpen(false)}
@@ -304,40 +355,28 @@ const Result = () => {
           >
             &times;
           </button>
-          <button
-            className="absolute left-4 text-white text-4xl font-bold px-2 py-1 focus:outline-none"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((prev) =>
-                prev > 0 ? prev - 1 : images.length - 1
-              );
-            }}
-            aria-label="Previous image"
-          >
-            &#8592;
-          </button>
-          <div className="relative">
-            <Image
-              src={images[lightboxIndex]}
-              alt={`result-script-${lightboxIndex}`}
-              width={700}
-              height={700}
-              className="rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+          <div className="relative flex items-center justify-center w-full h-full max-w-4xl max-h-[90vh]">
+            {script.file_type === "application/pdf" ? (
+              <iframe
+                src={script.file_url}
+                title="Script PDF Lightbox"
+                width="800px"
+                height="600px"
+                className="rounded-lg shadow-2xl bg-white"
+                style={{ border: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <Image
+                src={script.file_url}
+                alt={script.file_name || "script-image"}
+                width={700}
+                height={700}
+                className="rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </div>
-          <button
-            className="absolute right-4 text-white text-4xl font-bold px-2 py-1 focus:outline-none"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((prev) =>
-                prev < images.length - 1 ? prev + 1 : 0
-              );
-            }}
-            aria-label="Next image"
-          >
-            &#8594;
-          </button>
         </div>
       )}
 
@@ -347,8 +386,10 @@ const Result = () => {
             <Button
               className="!h-10 bg-transparent border border-[#EBEBEB] rounded-lg text-[#5C5C5C] md:text-sm text-xs tracking-[-0.6%] font-medium hover:bg-transparent hover:opacity-90 shadow-sm"
               onClick={() => {
-                if (currentStep > 1) {
-                  setCurrentStep(1);
+                if (currentStep === 1) {
+                  setCurrentStep(2);
+                } else {
+                  setCurrentStep(1)
                 }
               }}
             >
@@ -357,8 +398,8 @@ const Result = () => {
             <Button
               className="!h-10 md:text-sm text-xs rounded-[10px] bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 font-medium hover:opacity-90"
               onClick={() => {
-                if (currentStep === 1) {
-                  setCurrentStep(2);
+                if (currentStep > 1) {
+                  setCurrentStep(1);
                 }
               }}
             >

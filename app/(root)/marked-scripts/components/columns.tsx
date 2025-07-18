@@ -178,6 +178,8 @@ export const columns: ColumnDef<MarkedScript>[] = [
               ? "check"
               : row.original?.status?.toLocaleLowerCase() === "pending"
               ? "alert"
+              : row.original?.status?.toLocaleLowerCase() === "in_queue"
+              ? "in-queue"
               : "error"
           }.svg`}
           alt="check"
@@ -185,8 +187,8 @@ export const columns: ColumnDef<MarkedScript>[] = [
           height={16}
         />
         <div>
-          <p className="text-[#5C5C5C] font-medium text-xs">
-            {row.original?.status}
+          <p className="text-[#5C5C5C] font-medium text-xs capitalize">
+            {row.original?.status?.replaceAll("_", " ")}
           </p>
         </div>
       </div>
@@ -238,9 +240,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
                 className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg cursor-pointer"
                 onClick={() => {
                   if (action === "View Script") {
-                    router.push(
-                      `/marked-scripts/${row.original.student.student_id}`
-                    );
+                    router.push(`/marked-scripts/${row.original.script_id}`);
                   }
                 }}
               >

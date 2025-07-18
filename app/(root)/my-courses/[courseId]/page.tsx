@@ -25,7 +25,6 @@ import { z } from "zod";
 
 import { useDeleteCourse } from "@/hooks/useDeleteCourse";
 import { useFetchCourseDetails } from "@/hooks/useFetchCourseDetails";
-import { assessments, coursesData } from "@/lib/courses";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
