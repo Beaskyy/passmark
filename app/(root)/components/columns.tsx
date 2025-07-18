@@ -76,7 +76,7 @@ const ActionsCell = ({ row, table }: any) => {
             className="flex justify-center items-center border border-[#EBEBEB] bg-white w-fit h-8 shadow-sm px-3 rounded-lg cursor-pointer"
             onClick={() => {
               if (action === "View Script") {
-                router.push(`/marked-scripts/${row.original.student_id}`);
+                router.push(`/marked-scripts/${row.original.script_id}`);
               }
             }}
           >
@@ -235,13 +235,15 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md whitespace-nowrap">
+      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md whitespace-nowrap capitalize">
         <Image
           src={`/images/${
             row.original?.status?.toLocaleLowerCase() === "completed"
               ? "check"
               : row.original?.status?.toLocaleLowerCase() === "pending"
               ? "alert"
+              : row.original?.status?.toLocaleLowerCase() === "in_queue"
+              ? "in-queue"
               : "error"
           }.svg`}
           alt="check"
@@ -250,7 +252,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
         />
         <div>
           <p className="text-[#5C5C5C] font-medium text-xs">
-            {row.original?.status}
+            {row.original?.status?.replaceAll("_", " ")}
           </p>
         </div>
       </div>

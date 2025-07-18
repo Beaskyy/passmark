@@ -1,16 +1,21 @@
 "use client";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { columns } from "@/app/(root)/components/columns";
 import { DataTable } from "@/components/data-table";
 import EmptyState from "@/components/empty-state";
-import { Button } from "@/components/ui/button";
-import { assessments, coursesData } from "@/lib/courses";
-import { markedScriptsData } from "@/lib/data";
-import { Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import { useState } from "react";
 import ScriptsTableSkeleton from "@/components/skeletons/ScriptsTableSkeleton";
 import { useFetchAssessmentDetails } from "@/hooks/useFetchAssessmentDetails";
 import { useFetchAssessmentScriptList } from "@/hooks/useFetchAssessmentScriptList";
@@ -22,10 +27,12 @@ const ScriptId = ({
 }) => {
   const { scriptId, courseId } = params;
   const router = useRouter();
-  const { data, isLoading, isError, error } = useFetchAssessmentScriptList(scriptId)
+  const { data, isLoading, isError, error } =
+    useFetchAssessmentScriptList(scriptId);
   const { data: assessmentDetails, isLoading: isAssessmentLoading } =
     useFetchAssessmentDetails(scriptId);
   let tableData = data || [];
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
@@ -52,9 +59,32 @@ const ScriptId = ({
           >
             <span>Mark New Script</span>
           </Link>
-          <Button className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] hover:text-[#F5F7FF] hover:bg-primary rounded-[10px] lg:font-semibold font-medium">
-            More Options
-          </Button>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger className="lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium w-[122px] hover:bg-[#F0F3FF] hover:text-primary">
+              More Options
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[183px] py-3">
+              <DropdownMenuLabel
+                onClick={() => {
+                  setDropdownOpen(false);
+                }}
+                className="cursor-pointer"
+              >
+                <span className="lg:text-sm text-xs font-medium text-[#333333]">
+                  Edit Assessment
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                // onClick={() => handleDelete(assessmentId)}
+                className="cursor-pointer"
+              >
+                <span className="text-sm font-medium text-[#F11B1B]">
+                  Delete Assessment
+                </span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       {isLoading ? (
