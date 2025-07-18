@@ -29,18 +29,21 @@ type Criterion = {
   mark: string;
   description: string;
   guide_id?: string;
+  debounceTimeout?: NodeJS.Timeout | null;
 };
 
 type Penalty = {
   description: string;
   mark?: string;
   penalty_id?: string;
+  debounceTimeout?: NodeJS.Timeout | null;
 };
 
 type Bonus = {
   description: string;
   mark?: string;
   bonus_id?: string;
+  debounceTimeout?: NodeJS.Timeout | null;
 };
 
 type Question = {
@@ -55,6 +58,7 @@ type Question = {
   showBonuses: boolean;
   question_id?: string;
   isCreated?: boolean;
+  debounceTimeout?: NodeJS.Timeout | null;
 };
 
 const CreateAssessment = () => {
@@ -204,6 +208,205 @@ const CreateAssessment = () => {
     }
   };
 
+  // Remove all onBlur handlers for question, criterion, penalty, and bonus inputs
+  // Add per-entity debounced useEffect for each question, criterion, penalty, and bonus
+
+  // --- 1. Debounce for Questions ---
+  useEffect(() => {
+    if (!assessmentId) return;
+    questions.forEach((question, index) => {
+      if (
+        question.questionNumber.trim() &&
+        question.totalMark.trim() &&
+        question.question.trim()
+      ) {
+        if (!question.debounceTimeout) {
+          question.debounceTimeout = null;
+        }
+        if (question.debounceTimeout) clearTimeout(question.debounceTimeout);
+        question.debounceTimeout = setTimeout(async () => {
+          if (!question.isCreated) {
+            try {
+              const payload = {
+                course_id: courseId,
+                assessment_id: assessmentId!,
+                number: question.questionNumber,
+                text: question.question,
+                total_marks: Number(question.totalMark),
+                by_ai: useAI,
+              };
+              const response = await createQuestion.mutateAsync(payload);
+              const newQuestions = [...questions];
+              newQuestions[index] = {
+                ...question,
+                isCreated: true,
+                question_id: response.data?.question_id || response.question_id,
+                criteria: [{ criterion: "", mark: "", description: "" }],
+                penalties: [{ description: "", mark: "" }],
+                bonuses: [{ description: "", mark: "" }],
+              };
+              setQuestions(newQuestions);
+            } catch {}
+          } else if (question.question_id) {
+            try {
+              const payload = {
+                question_id: question.question_id,
+                course_id: courseId,
+                assessment_id: assessmentId!,
+                number: question.questionNumber,
+                text: question.question,
+                total_marks: Number(question.totalMark),
+                by_ai: useAI,
+              };
+              await updateQuestionApi.mutateAsync(payload);
+            } catch {}
+          }
+        }, 500);
+      }
+    });
+    // eslint-disable-next-line
+  }, [questions, assessmentId, useAI]);
+
+  // --- 2. Debounce for Criteria (Marking Guide) ---
+  useEffect(() => {
+    questions.forEach((question, questionIndex) => {
+      question.criteria.forEach((criterion, criterionIndex) => {
+        if (
+          criterion.criterion.trim() &&
+          criterion.mark.trim() &&
+          criterion.description.trim()
+        ) {
+          if (!criterion.debounceTimeout) {
+            criterion.debounceTimeout = null;
+          }
+          if (criterion.debounceTimeout)
+            clearTimeout(criterion.debounceTimeout);
+          criterion.debounceTimeout = setTimeout(async () => {
+            if (!question.question_id) return;
+            if (!criterion.guide_id) {
+              try {
+                const payload = {
+                  question_id: question.question_id as string,
+                  criteria: criterion.criterion,
+                  description: criterion.description,
+                  mark: Number(criterion.mark),
+                  by_ai: useAI,
+                };
+                const response = await createMarkingGuide.mutateAsync(payload);
+                const newQuestions = [...questions];
+                newQuestions[questionIndex].criteria[criterionIndex].guide_id =
+                  response.data?.guide_id || response.guide_id;
+                setQuestions(newQuestions);
+              } catch {}
+            } else {
+              try {
+                const payload = {
+                  guide_id: criterion.guide_id,
+                  question_id: question.question_id as string,
+                  criteria: criterion.criterion,
+                  description: criterion.description,
+                  mark: Number(criterion.mark),
+                  by_ai: useAI,
+                };
+                await updateMarkingGuide.mutateAsync(payload);
+              } catch {}
+            }
+          }, 500);
+        }
+      });
+    });
+    // eslint-disable-next-line
+  }, [questions, useAI]);
+
+  // --- 3. Debounce for Penalties ---
+  useEffect(() => {
+    questions.forEach((question, questionIndex) => {
+      question.penalties.forEach((penalty, penaltyIndex) => {
+        if (penalty.description.trim() && penalty.mark && penalty.mark.trim()) {
+          if (!penalty.debounceTimeout) {
+            penalty.debounceTimeout = null;
+          }
+          if (penalty.debounceTimeout) clearTimeout(penalty.debounceTimeout);
+          penalty.debounceTimeout = setTimeout(async () => {
+            if (!question.question_id) return;
+            if (!penalty.penalty_id) {
+              try {
+                const payload = {
+                  question_id: question.question_id as string,
+                  description: penalty.description,
+                  mark: Number(penalty.mark),
+                  by_ai: useAI,
+                };
+                const response = await createPenalty.mutateAsync(payload);
+                const newQuestions = [...questions];
+                newQuestions[questionIndex].penalties[penaltyIndex].penalty_id =
+                  response.data?.penalty_id || response.penalty_id;
+                setQuestions(newQuestions);
+              } catch {}
+            } else {
+              try {
+                if (!question.question_id) return;
+                const payload = {
+                  penalty_id: penalty.penalty_id,
+                  question_id: question.question_id as string,
+                  description: penalty.description,
+                  mark: Number(penalty.mark),
+                  by_ai: useAI,
+                };
+                await updatePenaltyApi.mutateAsync(payload);
+              } catch {}
+            }
+          }, 500);
+        }
+      });
+    });
+    // eslint-disable-next-line
+  }, [questions, useAI]);
+
+  // --- 4. Debounce for Bonuses ---
+  useEffect(() => {
+    questions.forEach((question, questionIndex) => {
+      question.bonuses.forEach((bonus, bonusIndex) => {
+        if (bonus.description.trim() && bonus.mark && bonus.mark.trim()) {
+          if (!bonus.debounceTimeout) {
+            bonus.debounceTimeout = null;
+          }
+          if (bonus.debounceTimeout) clearTimeout(bonus.debounceTimeout);
+          bonus.debounceTimeout = setTimeout(async () => {
+            if (!question.question_id) return;
+            if (!bonus.bonus_id) {
+              try {
+                const payload = {
+                  question_id: question.question_id as string,
+                  description: bonus.description,
+                  mark: Number(bonus.mark),
+                  by_ai: useAI,
+                };
+                const response = await createBonus.mutateAsync(payload);
+                const newQuestions = [...questions];
+                newQuestions[questionIndex].bonuses[bonusIndex].bonus_id =
+                  response.data?.bonus_id || response.bonus_id;
+                setQuestions(newQuestions);
+              } catch {}
+            } else {
+              try {
+                const payload = {
+                  bonus_id: bonus.bonus_id,
+                  question_id: question.question_id as string,
+                  description: bonus.description,
+                  mark: Number(bonus.mark),
+                  by_ai: useAI,
+                };
+                await updateBonusApi.mutateAsync(payload);
+              } catch {}
+            }
+          }, 500);
+        }
+      });
+    });
+    // eslint-disable-next-line
+  }, [questions, useAI]);
+
   const handleQuestionBlur = async (question: Question, index: number) => {
     // Only proceed if all required fields are filled
     if (
@@ -319,8 +522,9 @@ const CreateAssessment = () => {
     questionIndex: number,
     criterionIndex: number,
     field: keyof Criterion,
-    value: string
+    value: any
   ) => {
+    if (field === "debounceTimeout") return;
     const newQuestions = [...questions];
     newQuestions[questionIndex].criteria[criterionIndex][field] = value;
     setQuestions(newQuestions);
@@ -348,8 +552,9 @@ const CreateAssessment = () => {
     questionIndex: number,
     penaltyIndex: number,
     field: keyof Penalty,
-    value: string
+    value: any
   ) => {
+    if (field === "debounceTimeout") return;
     const newQuestions = [...questions];
     newQuestions[questionIndex].penalties[penaltyIndex][field] = value;
     setQuestions(newQuestions);
@@ -377,8 +582,9 @@ const CreateAssessment = () => {
     questionIndex: number,
     bonusIndex: number,
     field: keyof Bonus,
-    value: string
+    value: any
   ) => {
+    if (field === "debounceTimeout") return;
     const newQuestions = [...questions];
     newQuestions[questionIndex].bonuses[bonusIndex][field] = value;
     setQuestions(newQuestions);
@@ -484,17 +690,16 @@ const CreateAssessment = () => {
       } else {
         // Update penalty
         try {
+          if (!question.question_id) return;
           const payload = {
             penalty_id: penalty.penalty_id,
-            question_id: question.question_id,
+            question_id: question.question_id as string,
             description: penalty.description,
             mark: Number(penalty.mark),
             by_ai: useAI,
           };
           await updatePenaltyApi.mutateAsync(payload);
-        } catch (error) {
-          // Optionally show error toast
-        }
+        } catch {}
       }
     }
   };
@@ -640,7 +845,6 @@ const CreateAssessment = () => {
                           e.target.value
                         )
                       }
-                      onBlur={() => handleQuestionBlur(question, questionIndex)}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -659,9 +863,6 @@ const CreateAssessment = () => {
                             e.target.value
                           )
                         }
-                        onBlur={() =>
-                          handleQuestionBlur(question, questionIndex)
-                        }
                       />
                     </div>
                   </div>
@@ -677,7 +878,6 @@ const CreateAssessment = () => {
                     onChange={(e) =>
                       updateQuestion(questionIndex, "question", e.target.value)
                     }
-                    onBlur={() => handleQuestionBlur(question, questionIndex)}
                   />
                 </div>
                 {/* <div className="flex flex-col gap-1">
@@ -721,14 +921,6 @@ const CreateAssessment = () => {
                                   e.target.value
                                 )
                               }
-                              onBlur={() =>
-                                handleCriterionBlur(
-                                  question,
-                                  questionIndex,
-                                  criterion,
-                                  criterionIndex
-                                )
-                              }
                             />
                           </div>
                           <div className="flex flex-col gap-1">
@@ -745,14 +937,6 @@ const CreateAssessment = () => {
                                   criterionIndex,
                                   "mark",
                                   e.target.value
-                                )
-                              }
-                              onBlur={() =>
-                                handleCriterionBlur(
-                                  question,
-                                  questionIndex,
-                                  criterion,
-                                  criterionIndex
                                 )
                               }
                             />
@@ -773,14 +957,6 @@ const CreateAssessment = () => {
                                     criterionIndex,
                                     "description",
                                     e.target.value
-                                  )
-                                }
-                                onBlur={() =>
-                                  handleCriterionBlur(
-                                    question,
-                                    questionIndex,
-                                    criterion,
-                                    criterionIndex
                                   )
                                 }
                               />
@@ -850,14 +1026,6 @@ const CreateAssessment = () => {
                                         e.target.value
                                       )
                                     }
-                                    onBlur={() =>
-                                      handlePenaltyBlur(
-                                        question,
-                                        questionIndex,
-                                        penalty,
-                                        penaltyIndex
-                                      )
-                                    }
                                   />
                                   <Input
                                     placeholder="Penalty mark"
@@ -869,14 +1037,6 @@ const CreateAssessment = () => {
                                         penaltyIndex,
                                         "mark",
                                         e.target.value
-                                      )
-                                    }
-                                    onBlur={() =>
-                                      handlePenaltyBlur(
-                                        question,
-                                        questionIndex,
-                                        penalty,
-                                        penaltyIndex
                                       )
                                     }
                                   />
@@ -946,14 +1106,6 @@ const CreateAssessment = () => {
                                         e.target.value
                                       )
                                     }
-                                    onBlur={() =>
-                                      handleBonusBlur(
-                                        question,
-                                        questionIndex,
-                                        bonus,
-                                        bonusIndex
-                                      )
-                                    }
                                   />
                                   <Input
                                     placeholder="Bonus mark"
@@ -965,14 +1117,6 @@ const CreateAssessment = () => {
                                         bonusIndex,
                                         "mark",
                                         e.target.value
-                                      )
-                                    }
-                                    onBlur={() =>
-                                      handleBonusBlur(
-                                        question,
-                                        questionIndex,
-                                        bonus,
-                                        bonusIndex
                                       )
                                     }
                                   />

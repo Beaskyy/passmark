@@ -19,6 +19,16 @@ import { useState } from "react";
 import ScriptsTableSkeleton from "@/components/skeletons/ScriptsTableSkeleton";
 import { useFetchAssessmentDetails } from "@/hooks/useFetchAssessmentDetails";
 import { useFetchAssessmentScriptList } from "@/hooks/useFetchAssessmentScriptList";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useDeleteAssessment } from "@/hooks/useDeleteAssessment";
 
 const ScriptId = ({
   params,
@@ -33,6 +43,9 @@ const ScriptId = ({
     useFetchAssessmentDetails(scriptId);
   let tableData = data || [];
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { mutate: deleteAssessment, isPending: isDeleting } =
+    useDeleteAssessment();
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
@@ -66,7 +79,7 @@ const ScriptId = ({
             <DropdownMenuContent className="w-[183px] py-3">
               <DropdownMenuLabel
                 onClick={() => {
-                  setDropdownOpen(false);
+                  router.push(`/my-courses/${courseId}/assessments/edit/${assessmentDetails?.data?.assessment_id}`)
                 }}
                 className="cursor-pointer"
               >
@@ -76,7 +89,7 @@ const ScriptId = ({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                // onClick={() => handleDelete(assessmentId)}
+                onClick={() => setDeleteDialogOpen(true)}
                 className="cursor-pointer"
               >
                 <span className="text-sm font-medium text-[#F11B1B]">
@@ -118,6 +131,64 @@ const ScriptId = ({
           showIcon={false}
         />
       )}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent
+          className="max-w-[357px] px-5 py-4 text-center"
+          style={{ borderRadius: "20px" }}
+        >
+          <div className="flex flex-col items-center">
+            <div className="bg-[#FEEDE1] rounded-[10px] p-2 w-10 h-10 flex items-center justify-center mb-4">
+              <Image
+                src="/images/alert.svg"
+                alt="alert"
+                width={40}
+                height={40}
+              />
+            </div>
+            <DialogTitle className="text-base text-[#171717] font-semibold mb-2">
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription className="text-sm mb-6 text-[#8C8C8C]">
+              Kindly confirm that you want to delete this assessment?
+            </DialogDescription>
+            <div className="flex gap-3 w-full justify-center">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="w-1/2 border-none  lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
+                >
+                  No, Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                className="w-1/2 bg-[#335CFF] hover:bg-[#2346A0] flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium"
+                disabled={isDeleting}
+                onClick={() => {
+                  deleteAssessment(
+                    { assessment_id: scriptId },
+                    {
+                      onSuccess: (data) => {
+                        toast.success(
+                          data.message || "Assessment deleted successfully"
+                        );
+                        setDeleteDialogOpen(false);
+                        // Optionally: router.push or refetch
+                      },
+                      onError: (error) => {
+                        toast.error(
+                          error.message || "Failed to delete assessment"
+                        );
+                      },
+                    }
+                  );
+                }}
+              >
+                {isDeleting ? "Deleting..." : "Yes, Delete"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
