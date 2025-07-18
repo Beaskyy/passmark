@@ -108,7 +108,7 @@ const EditAssessment = () => {
   const path = usePathname();
   const segments = path?.split("/");
   const courseId = segments?.[2] || "";
-  const assessmentId = segments?.[6] || "";
+  const assessmentId = segments?.[5] || "";
   const [description, setDescription] = useState("");
   const [title, setTitle] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -121,6 +121,7 @@ const EditAssessment = () => {
     useFetchAssessmentDetails(assessmentId);
   const { data: questionsResponse, isLoading: isLoadingQuestions } =
     useFetchQuestions(assessmentId);
+  console.log(assessmentDetails, assessmentId, "beasky");
 
   // Fetch marking guides and penalties for each question
   const questionIds =
@@ -179,14 +180,19 @@ const EditAssessment = () => {
   // Initialize state with fetched data
   useEffect(() => {
     if (assessmentDetails?.data) {
-      setDescription(assessmentDetails.data.description || "");
-      setTitle(assessmentDetails.data.title || "");
+      setDescription(assessmentDetails?.data?.description || "");
+      setTitle(assessmentDetails?.data?.title || "");
     }
   }, [assessmentDetails]);
 
   // Initialize questions with fetched data
   useEffect(() => {
-    if (questionsResponse?.data && markingGuideResults && penaltyResults) {
+    if (
+      questions.length === 0 &&
+      questionsResponse?.data &&
+      markingGuideResults &&
+      penaltyResults
+    ) {
       const formattedQuestions = (questionsResponse.data as APIQuestion[]).map(
         (q: APIQuestion, index: number) => {
           const markingGuides = markingGuideResults[index]?.data || [];
@@ -263,7 +269,12 @@ const EditAssessment = () => {
       );
       setQuestions(formattedQuestions);
     }
-  }, [questionsResponse, markingGuideResults, penaltyResults]);
+  }, [
+    questionsResponse,
+    markingGuideResults,
+    penaltyResults,
+    questions.length,
+  ]);
 
   const updateAssessment = useUpdateAssessment();
   const updateQuestionApi = useUpdateQuestion();
@@ -639,7 +650,7 @@ const EditAssessment = () => {
   };
 
   // Show skeleton while loading
-  if (assessmentDetails.isLoading || questionsResponse.isLoading) {
+  if (assessmentDetails?.isLoading || questionsResponse?.isLoading) {
     return <EditAssessmentSkeleton />;
   }
 
