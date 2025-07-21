@@ -16,6 +16,7 @@ import { Navigation } from "./navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
 import { Skeleton } from "./ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export const Header = () => {
   const pathname = usePathname();
@@ -73,24 +74,63 @@ export const Header = () => {
             width={40}
             height={40}
           />
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-10 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+          <Popover>
+            <PopoverTrigger className="flex justify-center items-center gap-1.5 h-10 pl-[9px] pr-3 py-1.5 border border-[#F6F6F6] rounded-[22px] bg-[#FBFBFB]">
               <div className="flex justify-center items-center gap-2">
-                <div className="relative flex justify-center items-center w-8 h-8 rounded-full">
-                  <Image
-                    src={
-                      session?.user?.image
-                        ? session?.user?.image
-                        : "/images/profile.svg"
-                    }
-                    alt="profile"
-                    fill
-                    className="absolute rounded-full object-contain"
-                  />
+                <Image
+                  src="/images/coin.svg"
+                  alt="profile"
+                  width={22}
+                  height={22}
+                />
+                <div className="text-sm font-medium tracking-[-0.6%]">
+                  {isLoading ? (
+                    <Skeleton className="w-24 h-5" />
+                  ) : (
+                    <p className="text-[13px] text-[#FA8400] font-bold tracking-[0.8px] uppercase">
+                      50,000 UNITS
+                    </p>
+                  )}
                 </div>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[336px] py-3">
+              <div
+                onClick={() => router.push("/profile")}
+                className="cursor-pointer px-2 py-1.5"
+              >
+                <span className="text-sm font-medium text-[#333333]">
+                  My Profile
+                </span>
+              </div>
+              <div className="h-px bg-[#EBEBEB] my-1.5" />
+              <div
+                onClick={handleLogout}
+                className="cursor-pointer px-2 py-1.5"
+              >
+                <span className="text-sm font-medium text-[#F11B1B]">
+                  Log out
+                </span>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-9 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+              <div className="flex justify-center items-center gap-2">
+                <Image
+                  src={
+                    session?.user?.image
+                      ? session?.user?.image
+                      : "/images/profile.svg"
+                  }
+                  alt="profile"
+                  width={32}
+                  height={32}
+                  className="pt-0.5"
+                />
                 <div className="text-sm font-medium tracking-[-0.6%]">
                   {isLoading || !user ? (
-                    <Skeleton className="w-24 h-5" />
+                    <Skeleton className="w-10 h-5" />
                   ) : user.firstname && user.lastname ? (
                     `${user.firstname}`
                   ) : (
