@@ -111,3 +111,63 @@ export const markedScriptsData = [
     actions: ["View Script"],
   },
 ];
+
+export type UnitHistory = {
+  units: string;
+  amountPaid: string;
+  transactionId: string;
+  transactionDate: string;
+  status: "Success" | "Pending";
+};
+
+export const unitHistoryData: UnitHistory[] = [
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Feb 21, 2023 at 03:05 pm",
+    status: "Success",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Aug 3, 2023 at 12:10 am",
+    status: "Success",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Feb 21, 2023 at 03:05 pm",
+    status: "Pending",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Jan 1, 2023 at 01:49 pm",
+    status: "Success",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Sep 4, 2021 at 12:14 am",
+    status: "Pending",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Aug 18, 2023 at 04:12 pm",
+    status: "Pending",
+  },
+  {
+    units: "50,000 Units",
+    amountPaid: "₦300,000",
+    transactionId: "12304-3405JK",
+    transactionDate: "Jan 11, 2023 at 01:49 pm",
+    status: "Success",
+  },
+];

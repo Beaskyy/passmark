@@ -17,12 +17,15 @@ import { signOut, useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
 import { Skeleton } from "./ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "./ui/button";
+import { useState } from "react";
 
 export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
   const { user, isLoading } = useAccount();
+  const [showUnits, setShowUnits] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -94,24 +97,69 @@ export const Header = () => {
                 </div>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-[336px] py-3">
-              <div
-                onClick={() => router.push("/profile")}
-                className="cursor-pointer px-2 py-1.5"
-              >
-                <span className="text-sm font-medium text-[#333333]">
-                  My Profile
-                </span>
+            <PopoverContent className="w-[266px] py-3.5 flex flex-col justify-center items-center gap-3">
+              <div className="flex flex-col items-center justify-center gap-1.5">
+                <p className="text-xs text-[#A2A2A2]">My Unit Balance</p>
+                <h6 className="lg:text-[15px] text-sm text-[#FA8400] font-bold">
+                  50,000 UNITS
+                </h6>
               </div>
-              <div className="h-px bg-[#EBEBEB] my-1.5" />
-              <div
-                onClick={handleLogout}
-                className="cursor-pointer px-2 py-1.5"
-              >
-                <span className="text-sm font-medium text-[#F11B1B]">
-                  Log out
-                </span>
-              </div>
+              {showUnits && (
+                <div className="flex flex-col bg-[#FCFCFC] border border-[#FAFAFA] rounded-[10px] p-3 gap-3 w-full transition-all duration-1000">
+                  <div className="flex justify-between items-center w-full">
+                    <p className="lg:text-[13px] text-xs text-[#777777] font-medium tracking-[-0.06px]">
+                      Total Units
+                    </p>
+                    <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
+                      50.5K UNITS
+                    </p>
+                  </div>
+                  <div className="h-[1px] bg-[#F7F7F7]"></div>
+                  <div className="flex justify-between items-center w-full">
+                    <p className="lg:text-[13px] text-xs text-[#777777] font-medium tracking-[-0.06px]">
+                      Used Units
+                    </p>
+                    <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
+                      320 UNITS
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {showUnits ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="w-full border-none lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
+                    onClick={() => setShowUnits(false)}
+                  >
+                    Go Back
+                  </Button>
+                  <Button
+                  onClick={() => router.push("/units")}
+                    className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
+                  >
+                    Unit History
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="w-full border-none lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
+                    type="button"
+                    onClick={() => setShowUnits(true)}
+                  >
+                    More Details
+                  </Button>
+                  <Button
+                  onClick={() => router.push("/units")}
+                    className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
+                  >
+                    Buy Units
+                  </Button>
+                </div>
+              )}
             </PopoverContent>
           </Popover>
           <DropdownMenu>
