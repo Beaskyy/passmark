@@ -193,19 +193,6 @@ export function DataTable<TData, TValue>({
                 <p className="text-sm text-[#5C5C5C] font-medium">Export</p>
               </div>
             </div>
-            <div className="relative flex justify-center items-center w-full lg:min-w-[171px]">
-              <Input
-                placeholder="Search"
-                value={
-                  (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn(searchKey)?.setFilterValue(event.target.value)
-                }
-                className="max-h-9 placeholder:text-[#5C5C5C] !placeholder:lg:text-base placeholder:lg:text-sm p-2 w-full h-9 border border-[#EBEBEB] rounded-[10px] bg-white"
-              />
-              <Search className="absolute right-2 top-2 text-[#5C5C5C] size-5 cursor-pointer" />
-            </div>
             {showDeleteStudent && (
               <div className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85">
                 <Trash2 className="size-5 text-[#5C5C5C]" />
