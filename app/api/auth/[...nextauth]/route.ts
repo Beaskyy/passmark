@@ -89,19 +89,25 @@ const handler = NextAuth({
             body: JSON.stringify({ token: account.id_token }),
           }
         );
+        const data = await response.json();
         if (response.ok) {
-          const data = await response.json();
           token.accessToken = data.data.access;
-          token.user = data.data.user;
+          token.sub = data.data.user.pk; // Set sub to backend user id
+          token.user = {
+            id: data.data.user.pk,
+            name: data.data.user.fullname,
+            email: data.data.user.email,
+          };
         } else {
           token.accessToken = undefined;
           token.user = undefined;
         }
       }
 
+      // For subsequent calls, persist accessToken and user
       if (user) {
-        token.accessToken = user.accessToken;
-        token.user = user;
+        token.accessToken = user.accessToken || token.accessToken;
+        token.user = user || token.user;
       }
 
       return token;
