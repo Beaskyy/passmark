@@ -58,9 +58,10 @@ const Login = () => {
 
         if (result?.error) {
           toast.error("Invalid email or password");
+          setCurrentStep(1); // Go back to email step
         } else {
           toast.success("Login successful");
-          router.push("/")
+          router.push("/");
         }
       } catch (error) {
         toast.error("Something went wrong. Please try again.");

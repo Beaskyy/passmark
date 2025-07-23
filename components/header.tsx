@@ -178,7 +178,7 @@ export const Header = () => {
             </PopoverContent>
           </Popover>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-9 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-10 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
               <div className="flex justify-center items-center gap-2">
                 <Image
                   src={
@@ -189,7 +189,7 @@ export const Header = () => {
                   alt="profile"
                   width={32}
                   height={32}
-                  className="pt-0.5"
+                  className="rounded-full"
                 />
                 <div className="text-sm font-medium tracking-[-0.6%]">
                   {isLoading || !user ? (
