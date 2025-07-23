@@ -8,11 +8,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 const Login = () => {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,10 +56,10 @@ const Login = () => {
 
         if (result?.error) {
           toast.error("Invalid email or password");
-          setCurrentStep(1); // Go back to email step
+          setCurrentStep(1);
         } else {
           toast.success("Login successful");
-          router.push("/");
+          window.location.href = "/";
         }
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
