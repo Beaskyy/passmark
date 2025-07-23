@@ -19,6 +19,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 
 export const Header = () => {
   const pathname = usePathname();
@@ -26,6 +27,8 @@ export const Header = () => {
   const { data: session } = useSession();
   const { user, isLoading } = useAccount();
   const [showUnits, setShowUnits] = useState(false);
+  const { data: creditBalance, isLoading: isCreditLoading } =
+    useFetchOrganisationCreditBalance();
 
   const handleLogout = async () => {
     try {
@@ -87,11 +90,15 @@ export const Header = () => {
                   height={22}
                 />
                 <div className="text-sm font-medium tracking-[-0.6%]">
-                  {isLoading ? (
+                  {isCreditLoading ? (
                     <Skeleton className="w-24 h-5" />
                   ) : (
                     <p className="text-[13px] text-[#FA8400] font-bold tracking-[0.8px] uppercase">
-                      50,000 UNITS
+                      {creditBalance?.current_balance
+                        ? `${Number(
+                            creditBalance.current_balance
+                          ).toLocaleString()} UNITS`
+                        : "0 UNITS"}
                     </p>
                   )}
                 </div>
@@ -101,7 +108,15 @@ export const Header = () => {
               <div className="flex flex-col items-center justify-center gap-1.5">
                 <p className="text-xs text-[#A2A2A2]">My Unit Balance</p>
                 <h6 className="lg:text-[15px] text-sm text-[#FA8400] font-bold">
-                  50,000 UNITS
+                  {isCreditLoading ? (
+                    <Skeleton className="w-24 h-5" />
+                  ) : creditBalance?.current_balance ? (
+                    `${Number(
+                      creditBalance.current_balance
+                    ).toLocaleString()} UNITS`
+                  ) : (
+                    "0 UNITS"
+                  )}
                 </h6>
               </div>
               {showUnits && (
@@ -136,7 +151,7 @@ export const Header = () => {
                     Go Back
                   </Button>
                   <Button
-                  onClick={() => router.push("/units")}
+                    onClick={() => router.push("/units")}
                     className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
                   >
                     Unit History
@@ -153,7 +168,7 @@ export const Header = () => {
                     More Details
                   </Button>
                   <Button
-                  onClick={() => router.push("/units")}
+                    onClick={() => router.push("/units")}
                     className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
                   >
                     Buy Units
