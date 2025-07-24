@@ -126,7 +126,9 @@ export const Header = () => {
                       Total Units
                     </p>
                     <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
-                      50.5K UNITS
+                    {Number(
+                      creditBalance?.total_earned_credits
+                    ).toLocaleString()} UNITS
                     </p>
                   </div>
                   <div className="h-[1px] bg-[#F7F7F7]"></div>
@@ -135,7 +137,9 @@ export const Header = () => {
                       Used Units
                     </p>
                     <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
-                      320 UNITS
+                    {Number(
+                      creditBalance?.total_spent_credits
+                    ).toLocaleString()} UNITS
                     </p>
                   </div>
                 </div>
