@@ -17,8 +17,13 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./components/columns";
-import { unitHistoryData } from "@/lib/data";
+import { useFetchOrganisationPaymentTransactions } from "@/hooks/useFetchOrganisationPaymentTransactions";
+import ScriptsTableSkeleton from "@/components/skeletons/ScriptsTableSkeleton";
+import EmptyState from "@/components/empty-state";
 import { useState } from "react";
+import { UnitHistory } from "@/lib/data";
+import { formatDate } from "./components/columns";
+import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 
 const Units = () => {
   const router = useRouter();
@@ -39,6 +44,10 @@ const Units = () => {
   // const organisationId = user?.organisation?.org_id;
   // const { data = [], isLoading } = useFetchScripts(organisationId);
 
+  const { data, isLoading } = useFetchOrganisationPaymentTransactions();
+  const { data: creditBalance, isLoading: isCreditLoading } =
+    useFetchOrganisationCreditBalance();
+
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex flex-col gap-[34px]">
@@ -55,7 +64,13 @@ const Units = () => {
           <div className="flex lg:flex-row flex-col justify-between lg:items-center py-4 px-[22px] bg-[#F0F3FF] rounded-[10px] gap-4">
             <div className="flex flex-col">
               <h5 className="text-[#171717] lg:text-base text-sm font-semibold">
-                50,000
+                {isCreditLoading ? (
+                  <span className="inline-block w-24 h-6 bg-gray-200 animate-pulse rounded" />
+                ) : creditBalance?.current_balance ? (
+                  Number(creditBalance.current_balance).toLocaleString()
+                ) : (
+                  "0"
+                )}
               </h5>
               <p className="text-[#737373] lg:text-sm text-xs">My Units</p>
             </div>
@@ -130,13 +145,38 @@ const Units = () => {
             </Dialog>
           </div>
         </div>
-        <DataTable
-          columns={columns}
-          data={unitHistoryData}
-          searchKey="transactionId"
-          tableName="Unit History"
-          getId={(row) => row.transactionId}
-        />
+        {/* Table Section */}
+        {isLoading ? (
+          <ScriptsTableSkeleton />
+        ) : data?.data && data.data.length === 0 ? (
+          <EmptyState
+            image="/images/empty-state.svg"
+            title="No Unit Transactions"
+            desc="You have not made any unit transactions yet."
+            link="/units"
+            buttonText="Buy Units"
+            showIcon
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={(data?.data || []).map(
+              (tx): UnitHistory => ({
+                units: tx.credits_purchased
+                  ? `${tx.credits_purchased.toLocaleString()} Units`
+                  : "0 Units",
+                amountPaid: tx.amount ? `₦${tx.amount.toLocaleString()}` : "₦0",
+                transactionId: tx.transaction_id,
+                transactionDate: formatDate(tx.created_at),
+                status:
+                  tx.payment_status === "COMPLETED" ? "Success" : "Pending",
+              })
+            )}
+            searchKey="transactionId"
+            tableName="Unit History"
+            getId={(row) => row.transactionId}
+          />
+        )}
       </div>
     </div>
   );

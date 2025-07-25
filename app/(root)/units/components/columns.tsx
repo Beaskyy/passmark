@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 
 // Helper to format date
-function formatDate(dateString: string | null | undefined) {
+export function formatDate(dateString: string | null | undefined) {
   if (!dateString) return "-";
   const date = new Date(dateString);
   return date
