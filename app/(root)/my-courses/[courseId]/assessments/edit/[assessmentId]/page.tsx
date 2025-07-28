@@ -144,9 +144,7 @@ const EditAssessment = () => {
             },
           }
         );
-        console.log(`GET marking guides for question ${qId}:`, response);
         const result = await response.json();
-        console.log(`Marking guides data for question ${qId}:`, result);
         return result.data as APIMarkingGuide[];
       },
       enabled: !!token && !!orgId && !!qId,
