@@ -121,7 +121,6 @@ const EditAssessment = () => {
     useFetchAssessmentDetails(assessmentId);
   const { data: questionsResponse, isLoading: isLoadingQuestions } =
     useFetchQuestions(assessmentId);
-  console.log(assessmentDetails, assessmentId, "beasky");
 
   // Fetch marking guides and penalties for each question
   const questionIds =
