@@ -165,9 +165,7 @@ const EditAssessment = () => {
             },
           }
         );
-        console.log(`GET penalties for question ${qId}:`, response);
         const result = await response.json();
-        console.log(`Penalties data for question ${qId}:`, result);
         return result.data as APIPenalty[];
       },
       enabled: !!token && !!orgId && !!qId,
