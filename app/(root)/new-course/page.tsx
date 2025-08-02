@@ -84,8 +84,6 @@ const NewCourse = () => {
       return response.json();
     },
     onSuccess: (response) => {
-      console.log(response, "this is the response");
-      console.log(response.data.course_id, "this is the response");
       toast.success("Course created successfully!");
       router.push(`/new-course/${response.data.course_id}/add-student`);
     },
