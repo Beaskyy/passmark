@@ -24,12 +24,21 @@ import { UnitHistory } from "@/lib/data";
 import { formatDate } from "./components/columns";
 import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 import { useFetchPaymentPlans } from "@/hooks/useFetchPaymentPlans";
+import { useCreatePaymentLink } from "@/hooks/useCreatePaymentLink";
+import { useAccount } from "@/providers/AccountProvider";
+import { toast } from "sonner";
 import Link from "next/link";
 
 const Units = () => {
   const router = useRouter();
   const [units, setUnits] = useState("");
   const [error, setError] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { user } = useAccount();
+  const { mutate: createPaymentLink, isPending: isCreatingPaymentLink } =
+    useCreatePaymentLink();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +49,43 @@ const Units = () => {
     setError("");
     // Continue with submit logic
   };
+
+  const handleBuyUnits = () => {
+    if (!selectedPlan) {
+      toast.error("Please select a payment plan");
+      return;
+    }
+
+    if (!user?.organisation?.org_id || !user?.email) {
+      toast.error("Missing user information");
+      return;
+    }
+
+    createPaymentLink(
+      {
+        pricing_id: selectedPlan,
+        organisation_id: user.organisation.org_id,
+        email: user.email,
+      },
+      {
+        onSuccess: (response) => {
+          if (response.data?.payment_link) {
+            // Open payment link in new tab
+            window.open(response.data.payment_link, "_blank");
+            toast.success("Payment link generated successfully");
+            setIsDialogOpen(false);
+            setSelectedPlan(null);
+          } else {
+            toast.error("Failed to generate payment link");
+          }
+        },
+        onError: (error: any) => {
+          toast.error(error.message || "Failed to create payment link");
+        },
+      }
+    );
+  };
+
   // Remove useAccount and useFetchScripts
   // const { user } = useAccount();
   // const organisationId = user?.organisation?.org_id;
@@ -77,7 +123,7 @@ const Units = () => {
               </h5>
               <p className="text-[#737373] lg:text-sm text-xs">My Units</p>
             </div>
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium">
                 <Plus className="lg:size-5 size-4" />
                 <span>Buy More Units</span>
@@ -114,7 +160,12 @@ const Units = () => {
                           .map((plan) => (
                             <div
                               key={plan.pricing_id}
-                              className="flex justify-center items-center border border-[#F2F2F2] py-3 px-3.5 rounded-xl h-12 hover:border-primary cursor-pointer"
+                              className={`flex justify-center items-center border py-3 px-3.5 rounded-xl h-12 cursor-pointer transition-all duration-200 ${
+                                selectedPlan === plan.pricing_id
+                                  ? "border-[#0089FF] bg-[#F0F3FF]"
+                                  : "border-[#F2F2F2] hover:border-primary"
+                              }`}
+                              onClick={() => setSelectedPlan(plan.pricing_id)}
                             >
                               <div className="flex justify-between items-center lg:text-sm text-xs text-[#2A2A2A] font-semibold w-full tracking-[-0.1px]">
                                 <p className="">
@@ -150,6 +201,8 @@ const Units = () => {
                       onClick={() => {
                         setUnits("");
                         setError("");
+                        setSelectedPlan(null);
+                        setIsDialogOpen(false);
                       }}
                     >
                       No, Cancel
@@ -157,8 +210,10 @@ const Units = () => {
                     <Button
                       type="submit"
                       className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
+                      onClick={handleBuyUnits}
+                      disabled={!selectedPlan || isCreatingPaymentLink}
                     >
-                      Buy Units
+                      {isCreatingPaymentLink ? "Creating..." : "Buy Units"}
                     </Button>
                   </div>
                 </>

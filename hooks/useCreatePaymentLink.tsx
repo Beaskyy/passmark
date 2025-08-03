@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 export type CreatePaymentLinkPayload = {
   pricing_id: string;
@@ -16,6 +17,7 @@ export type CreatePaymentLinkResponse = {
 };
 
 const createPaymentLink = async (
+  token: string,
   payload: CreatePaymentLinkPayload
 ): Promise<CreatePaymentLinkResponse> => {
   const response = await fetch(
@@ -24,18 +26,26 @@ const createPaymentLink = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
     }
   );
   if (!response.ok) {
-    throw new Error("Failed to create payment link");
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to create payment link");
   }
   return response.json();
 };
 
 export const useCreatePaymentLink = () => {
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
   return useMutation({
-    mutationFn: createPaymentLink,
+    mutationFn: (payload: CreatePaymentLinkPayload) => {
+      if (!token) throw new Error("No access token");
+      return createPaymentLink(token, payload);
+    },
   });
 };
