@@ -7,6 +7,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import React, { useState } from "react";
+import { useExtractQuestions } from "@/hooks/useExtractQuestions";
+import { useUploadFile } from "@/hooks/useUploadFile";
+import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
+import { Trash2 } from "lucide-react";
+
+// Define the type for fileObj
+interface FileObj {
+  file: File;
+  status: "uploading" | "completed" | "error";
+  progress: number;
+  error: string | null;
+}
 
 const AddQuestion = () => {
   const params = useParams();
@@ -14,11 +27,86 @@ const AddQuestion = () => {
   const createId = params.createId as string;
   const router = useRouter();
   const [showAddBulk, setShowAddBulk] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [fileObj, setFileObj] = useState<FileObj | null>(null);
+  const { mutate: extractQuestions, isPending: isExtracting } =
+    useExtractQuestions();
+  const { mutate: uploadFile, isPending: isUploading } = useUploadFile();
 
   const handleFileSelect = (selectedFile: File) => {
-    setFile(selectedFile);
+    setFileObj({
+      file: selectedFile,
+      status: "uploading",
+      progress: 0,
+      error: null,
+    });
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 20;
+      setFileObj((prev) =>
+        prev ? { ...prev, progress: Math.min(progress, 100) } : null
+      );
+      if (progress >= 100) {
+        clearInterval(interval);
+        setFileObj((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "completed",
+                progress: 100,
+                error: null,
+              }
+            : null
+        );
+      }
+    }, 200);
   };
+
+  const handleDelete = () => {
+    setFileObj(null);
+  };
+
+  const handleContinue = () => {
+    if (!fileObj || fileObj.status !== "completed") return;
+    if (!createId) {
+      toast.error("Missing assessment ID");
+      return;
+    }
+
+    // First upload the file to Cloudinary
+    uploadFile(fileObj.file, {
+      onSuccess: (uploadResponse) => {
+        // Then extract questions using the uploaded file URL
+        extractQuestions(
+          {
+            assessment_id: createId,
+            doc_url: uploadResponse.script_url,
+          },
+          {
+            onSuccess: () => {
+              toast.success("Questions extracted successfully");
+              router.push(
+                `/my-courses/${courseId}/assessments/create/${createId}/create-assessment`
+              );
+            },
+            onError: (err: any) => {
+              toast.error(err.message || "Failed to extract questions");
+              setFileObj((prev) =>
+                prev ? { ...prev, status: "error", error: err.message } : null
+              );
+            },
+          }
+        );
+      },
+      onError: (err: any) => {
+        toast.error(err.message || "Failed to upload file");
+        setFileObj((prev) =>
+          prev ? { ...prev, status: "error", error: err.message } : null
+        );
+      },
+    });
+  };
+
   return (
     <main className="lg:px-[108px] md:px-[20] p-5">
       <div className="flex justify-between lg:items-center gap-4 mt-2">
@@ -49,30 +137,84 @@ const AddQuestion = () => {
               </div>
               <div className="flex flex-col justify-center items-center gap-11">
                 <div className="flex flex-col gap-3 lg:min-w-[534px]">
-                  <div
-                    className={`flex flex-col justify-center items-center gap-3 border border-dashed bg-white p-8 rounded-xl `}
-                  >
-                    <Image
-                      src={`/images/upload.svg`}
-                      alt="upload"
-                      width={24}
-                      height={24}
-                    />
-                    <div className="flex flex-col gap-1.5">
-                      <p className="lg:text-sm text-xs text-[#444444] lg:font-semibold font-medium">
-                        Choose a file or drag & drop it here
-                      </p>
-                      <p className="lg:text-sm text-xs text-[#838282] lg:font-normal font-light">
-                        PDF, PNG, JPEG and DOC formats, up to 20 MB
-                      </p>
+                  {fileObj ? (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between p-4 border border-[#EBEBEB] rounded-xl bg-white">
+                        <div className="flex items-center gap-3">
+                          <Image
+                            src="/images/file.svg"
+                            alt="file"
+                            width={24}
+                            height={24}
+                          />
+                          <div className="flex flex-col gap-1">
+                            <p className="text-sm font-medium text-[#444444]">
+                              {fileObj.file.name}
+                            </p>
+                            <p className="text-xs text-[#838282]">
+                              {(fileObj.file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleDelete}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                      {fileObj.status === "uploading" && (
+                        <div className="flex flex-col gap-2">
+                          <Progress
+                            value={fileObj.progress}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-[#838282] text-center">
+                            Uploading... {fileObj.progress}%
+                          </p>
+                        </div>
+                      )}
+                      {fileObj.status === "error" && (
+                        <p className="text-xs text-red-500 text-center">
+                          {fileObj.error}
+                        </p>
+                      )}
                     </div>
-                    <Button className="bg-transparent border border-[#EBEBEB] text-[#5C5C5C] lg:text-sm text-xs max-h-9 py-2 px-[18px] shadow-sm font-medium hover:text-white">
-                      Browse File
-                    </Button>
-                  </div>
+                  ) : (
+                    <FileUpload
+                      onFileSelect={handleFileSelect}
+                      accept={{
+                        "application/pdf": [".pdf"],
+                        "image/png": [".png"],
+                        "image/jpeg": [".jpg", ".jpeg"],
+                        "application/msword": [".doc"],
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                          [".docx"],
+                      }}
+                      maxSize={20 * 1024 * 1024} // 20MB
+                      uploadText="Choose a file or drag & drop it here"
+                      subText="PDF, PNG, JPEG and DOC formats, up to 20 MB"
+                      icon="/images/upload.svg"
+                    />
+                  )}
                 </div>
-                <Button className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10">
-                  Continue
+                <Button
+                  className="w-fit md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+                  onClick={handleContinue}
+                  disabled={
+                    !fileObj ||
+                    fileObj.status !== "completed" ||
+                    isUploading ||
+                    isExtracting
+                  }
+                >
+                  {isUploading
+                    ? "Uploading..."
+                    : isExtracting
+                    ? "Extracting Questions..."
+                    : "Continue"}
                 </Button>
               </div>
             </div>
