@@ -10,8 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -24,6 +23,8 @@ import { useState } from "react";
 import { UnitHistory } from "@/lib/data";
 import { formatDate } from "./components/columns";
 import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
+import { useFetchPaymentPlans } from "@/hooks/useFetchPaymentPlans";
+import Link from "next/link";
 
 const Units = () => {
   const router = useRouter();
@@ -47,6 +48,8 @@ const Units = () => {
   const { data, isLoading } = useFetchOrganisationPaymentTransactions();
   const { data: creditBalance, isLoading: isCreditLoading } =
     useFetchOrganisationCreditBalance();
+  const { data: paymentPlans, isLoading: isPaymentPlansLoading } =
+    useFetchPaymentPlans();
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
@@ -80,45 +83,63 @@ const Units = () => {
                 <span>Buy More Units</span>
               </DialogTrigger>
 
-              <DialogContent className="flex flex-col gap-10 w-[336px]">
+              <DialogContent className="flex flex-col gap-10 max-w-[336px] w-full">
                 <DialogHeader>
                   <DialogTitle className="text-[#111827] lg:text-xl text-balance font-semibold tracking-[-1%]">
                     Buy Units
                   </DialogTitle>
+                  <DialogDescription className="text-[#475467] lg:text-sm text-xs">
+                    Select what you&apos;ll like to get
+                  </DialogDescription>
                 </DialogHeader>
-                <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-                  <div className="flex flex-col gap-[7px]">
-                    <Label htmlFor="units" className="text-sm text-[#475467]">
-                      Units
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="units"
-                        type="text"
-                        min="1"
-                        value={units}
-                        onChange={(e) => {
-                          setUnits(e.target.value.replace(/[^0-9]/g, ""));
-                          setError("");
-                        }}
-                        placeholder="eg, 2,000 Units"
-                        className="w-full pr-10 shadow-none"
-                        required
+                <>
+                  <div className="flex flex-col gap-2.5">
+                    {isPaymentPlansLoading
+                      ? // Loading skeleton for payment plans
+                        Array.from({ length: 3 }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-center items-center border border-[#F2F2F2] py-3 px-3.5 rounded-xl h-12"
+                          >
+                            <div className="flex justify-between items-center lg:text-sm text-xs text-[#2A2A2A] font-semibold w-full tracking-[-0.1px]">
+                              <div className="w-20 h-4 bg-gray-200 animate-pulse rounded" />
+                              <div className="w-16 h-4 bg-gray-200 animate-pulse rounded" />
+                            </div>
+                          </div>
+                        ))
+                      : paymentPlans?.data && paymentPlans.data.length > 0
+                      ? // Render payment plans from API
+                        paymentPlans.data
+                          .filter((plan) => plan.is_active)
+                          .map((plan) => (
+                            <div
+                              key={plan.pricing_id}
+                              className="flex justify-center items-center border border-[#F2F2F2] py-3 px-3.5 rounded-xl h-12 hover:border-primary cursor-pointer"
+                            >
+                              <div className="flex justify-between items-center lg:text-sm text-xs text-[#2A2A2A] font-semibold w-full tracking-[-0.1px]">
+                                <p className="">
+                                  {Number(plan.credit).toLocaleString()} Units
+                                </p>
+                                <p className="">
+                                  ₦{Number(plan.amount).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                      : null}
+                    <div className="h-10 bg-[#F7FAFF] rounded-lg mt-1 py-2.5 px-2 flex items-center gap-1.5">
+                      <Image
+                        src="/images/info2.svg"
+                        alt="info"
+                        width={20}
+                        height={20}
                       />
-                      {error && (
-                        <p className="text-red-500 text-xs mt-1">{error}</p>
-                      )}
-                      <div className="h-10 bg-[#F7FAFF] rounded-lg mt-1 py-2.5 px-2 flex items-center gap-1.5">
-                        <Image
-                          src="/images/info2.svg"
-                          alt="info"
-                          width={20}
-                          height={20}
-                        />
-                        <p className="text-[#504D4D] text-[13px] font-medium">
-                          1 Unit is equals to N20,000
-                        </p>
-                      </div>
+                      <p className="text-[#504D4D] text-[13px] font-medium">
+                        Need More Units? Kindly{" "}
+                        <Link href="/units" className="underline">
+                          Contact Us
+                        </Link>
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -137,10 +158,10 @@ const Units = () => {
                       type="submit"
                       className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
                     >
-                      Continue
+                      Buy Units
                     </Button>
                   </div>
-                </form>
+                </>
               </DialogContent>
             </Dialog>
           </div>
