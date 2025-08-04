@@ -25,6 +25,7 @@ import { formatDate } from "./components/columns";
 import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 import { useFetchPaymentPlans } from "@/hooks/useFetchPaymentPlans";
 import { useCreatePaymentLink } from "@/hooks/useCreatePaymentLink";
+import { useConfirmPayment } from "@/hooks/useConfirmPayment";
 import { useAccount } from "@/providers/AccountProvider";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -39,6 +40,8 @@ const Units = () => {
   const { user } = useAccount();
   const { mutate: createPaymentLink, isPending: isCreatingPaymentLink } =
     useCreatePaymentLink();
+  const { mutate: confirmPayment, isPending: isConfirmingPayment } =
+    useConfirmPayment();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +76,29 @@ const Units = () => {
             // Open payment link in new tab
             window.open(response.data.payment_link, "_blank");
             toast.success("Payment link generated successfully");
-            setIsDialogOpen(false);
-            setSelectedPlan(null);
+
+            // Call confirm payment endpoint
+            if (response.data.tx_ref && user?.organisation?.org_id) {
+              confirmPayment(
+                {
+                  tx_ref: response.data.tx_ref,
+                  organisation_id: user.organisation.org_id,
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Payment confirmed successfully");
+                    setIsDialogOpen(false);
+                    setSelectedPlan(null);
+                  },
+                  onError: (error: any) => {
+                    toast.error(error.message || "Failed to confirm payment");
+                  },
+                }
+              );
+            } else {
+              setIsDialogOpen(false);
+              setSelectedPlan(null);
+            }
           } else {
             toast.error("Failed to generate payment link");
           }
