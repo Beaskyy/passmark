@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import AzureADProvider from "next-auth/providers/azure-ad";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 // Extend the session type
@@ -31,6 +32,11 @@ const handler = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID!,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
+      tenantId: process.env.AZURE_AD_TENANT_ID!,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -79,8 +85,11 @@ const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user, account }) {
-      // Only on initial sign in with Google
-      if (account?.provider === "google" && account.id_token) {
+      // Only on initial sign in with Google or Microsoft
+      if (
+        (account?.provider === "google" || account?.provider === "azure-ad") &&
+        account.id_token
+      ) {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/account/social-auth/`,
           {

@@ -186,7 +186,10 @@ const Login = () => {
                           height={24}
                         />
                       </div>
-                      <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
+                      <div
+                        className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
+                        onClick={() => signIn("azure-ad")}
+                      >
                         <Image
                           src="/images/microsoft.svg"
                           alt="microsoft"
