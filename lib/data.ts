@@ -25,6 +25,10 @@ export type MarkedScript = {
   file_name: string;
   file_type: string;
   file_size: string;
+  marked_comment: string | null;
+  total_mark_awarded: number;
+  total_questions_evaluated: number;
+  extract: string | null;
   marked_at: string | null;
   created_at: string;
   updated_at: string;
