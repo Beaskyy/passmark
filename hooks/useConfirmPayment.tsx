@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 export type ConfirmPaymentPayload = {
   tx_ref: string;
@@ -11,7 +12,8 @@ export type ConfirmPaymentResponse = {
 };
 
 const confirmPayment = async (
-  payload: ConfirmPaymentPayload
+  payload: ConfirmPaymentPayload,
+  token: string
 ): Promise<ConfirmPaymentResponse> => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/credit/payment-confirm/`,
@@ -19,6 +21,7 @@ const confirmPayment = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
     }
@@ -30,7 +33,13 @@ const confirmPayment = async (
 };
 
 export const useConfirmPayment = () => {
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
   return useMutation({
-    mutationFn: confirmPayment,
+    mutationFn: (payload: ConfirmPaymentPayload) => {
+      if (!token) throw new Error("No access token");
+      return confirmPayment(payload, token);
+    },
   });
 };
