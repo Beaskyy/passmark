@@ -38,7 +38,7 @@ type APIResponse<T> = {
 
 type APIMarkingGuide = {
   guide_id: string;
-  criterion: string;
+  criteria: string;
   description: string;
   mark: number;
 };
@@ -66,7 +66,7 @@ type APIQuestion = {
 };
 
 type FormattedMarkingGuide = {
-  criterion: string;
+  criteria: string;
   mark: string;
   description: string;
   guide_id?: string;
@@ -132,7 +132,7 @@ const EditAssessment = () => {
     queries: questionIds.map((qId: string) => ({
       queryKey: ["markingGuideList", qId],
       queryFn: async () => {
-        if (!token || !orgId) return [];
+        if (!token || !orgId) return { data: [] };
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/main/marking-guide/list/${qId}/`,
           {
@@ -144,7 +144,8 @@ const EditAssessment = () => {
           }
         );
         const result = await response.json();
-        return result.data as APIMarkingGuide[];
+
+        return result;
       },
       enabled: !!token && !!orgId && !!qId,
     })),
@@ -154,7 +155,7 @@ const EditAssessment = () => {
     queries: questionIds.map((qId: string) => ({
       queryKey: ["penaltyList", qId],
       queryFn: async () => {
-        if (!token || !orgId) return [];
+        if (!token || !orgId) return { data: [] };
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/main/penalty/list/${qId}/`,
           {
@@ -166,7 +167,8 @@ const EditAssessment = () => {
           }
         );
         const result = await response.json();
-        return result.data as APIPenalty[];
+
+        return result;
       },
       enabled: !!token && !!orgId && !!qId,
     })),
@@ -182,20 +184,36 @@ const EditAssessment = () => {
 
   // Initialize questions with fetched data
   useEffect(() => {
+    // Check if all required data is available
+    const allMarkingGuidesLoaded = markingGuideResults?.every(
+      (result) => result.isSuccess
+    );
+    const allPenaltiesLoaded = penaltyResults?.every(
+      (result) => result.isSuccess
+    );
+
     if (
       questions.length === 0 &&
       questionsResponse?.data &&
       markingGuideResults &&
-      penaltyResults
+      penaltyResults &&
+      markingGuideResults.length > 0 &&
+      penaltyResults.length > 0 &&
+      allMarkingGuidesLoaded &&
+      allPenaltiesLoaded
     ) {
       const formattedQuestions = (questionsResponse.data as APIQuestion[]).map(
         (q: APIQuestion, index: number) => {
-          const markingGuides = markingGuideResults[index]?.data || [];
-          const penalties = penaltyResults[index]?.data || [];
+          // Check if the marking guide query result exists and has data
+          const markingGuideResult = markingGuideResults[index];
+          const penaltyResult = penaltyResults[index];
+
+          const markingGuides = markingGuideResult?.data?.data || [];
+          const penalties = penaltyResult?.data?.data || [];
 
           const formattedMarkingGuides: FormattedMarkingGuide[] =
             markingGuides.map((guide: APIMarkingGuide) => ({
-              criterion: guide.criterion || "",
+              criteria: guide.criteria || "",
               mark: guide.mark.toString() || "",
               description: guide.description || "",
               guide_id: guide.guide_id,
@@ -229,7 +247,7 @@ const EditAssessment = () => {
           ];
 
           const defaultMarkingGuide: FormattedMarkingGuide = {
-            criterion: "",
+            criteria: "",
             mark: "0",
             description: "",
           };
@@ -356,7 +374,7 @@ const EditAssessment = () => {
         totalMark: "",
         question: "",
         answer: "",
-        criteria: [{ criterion: "", mark: "", description: "" }],
+        criteria: [{ criteria: "", mark: "", description: "" }],
         penalties: [{ description: "", mark: "0" }],
         bonuses: [{ description: "", mark: "0" }],
         showPenalties: true,
@@ -386,7 +404,7 @@ const EditAssessment = () => {
   const addCriterion = (questionIndex: number) => {
     const newQuestions = [...questions];
     newQuestions[questionIndex].criteria.push({
-      criterion: "",
+      criteria: "",
       mark: "",
       description: "",
     });
@@ -406,7 +424,7 @@ const EditAssessment = () => {
   const updateCriterion = (
     questionIndex: number,
     criterionIndex: number,
-    field: keyof APIMarkingGuide,
+    field: keyof FormattedMarkingGuide,
     value: string
   ) => {
     const newQuestions = [...questions];
@@ -477,7 +495,7 @@ const EditAssessment = () => {
     criterionIndex: number
   ) => {
     if (
-      criterion.criterion.trim() &&
+      criterion.criteria.trim() &&
       criterion.mark &&
       criterion.description.trim() &&
       question.question_id
@@ -486,7 +504,7 @@ const EditAssessment = () => {
         try {
           const payload = {
             question_id: question.question_id,
-            criteria: criterion.criterion,
+            criteria: criterion.criteria,
             description: criterion.description,
             mark: parseFloat(criterion.mark),
             by_ai: useAI,
@@ -504,7 +522,7 @@ const EditAssessment = () => {
           const payload = {
             guide_id: criterion.guide_id,
             question_id: question.question_id,
-            criteria: criterion.criterion,
+            criteria: criterion.criteria,
             description: criterion.description,
             mark: parseFloat(criterion.mark),
             by_ai: useAI,
@@ -645,7 +663,17 @@ const EditAssessment = () => {
   };
 
   // Show skeleton while loading
-  if (assessmentDetails?.isLoading || questionsResponse?.isLoading) {
+  const markingGuidesLoading = markingGuideResults?.some(
+    (result) => result.isLoading
+  );
+  const penaltiesLoading = penaltyResults?.some((result) => result.isLoading);
+
+  if (
+    assessmentDetails?.isLoading ||
+    questionsResponse?.isLoading ||
+    markingGuidesLoading ||
+    penaltiesLoading
+  ) {
     return <EditAssessmentSkeleton />;
   }
 
@@ -755,12 +783,12 @@ const EditAssessment = () => {
                           <Input
                             placeholder="Definition of animal cell"
                             className="shadow-sm border border-[#EBEBEB] p-2.5 pl-3 text-sm placeholder:text-[#8A8A8A] h-10"
-                            value={criterion.criterion}
+                            value={criterion.criteria}
                             onChange={(e) =>
                               updateCriterion(
                                 questionIndex,
                                 criterionIndex,
-                                "criterion",
+                                "criteria",
                                 e.target.value
                               )
                             }
