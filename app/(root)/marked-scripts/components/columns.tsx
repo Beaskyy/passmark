@@ -129,7 +129,9 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
-    cell: ({ row }) => <span>{50} Points</span>,
+    cell: ({ row }) => (
+      <span>{row.original?.total_mark_awarded || 0} Points</span>
+    ),
   },
   {
     accessorKey: "dateMarked",
