@@ -112,6 +112,26 @@ export const columns: ColumnDef<MarkedScript>[] = [
     cell: ({ row }) => row.original?.student?.student_number,
   },
   {
+    accessorKey: "courseCode",
+    header: ({ column }) => {
+      return (
+        <div
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-0.5 cursor-pointer"
+        >
+          Course Code
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+          />
+        </div>
+      );
+    },
+    cell: ({ row }) => row.original?.course?.code,
+  },
+  {
     accessorKey: "studentScore",
     header: ({ column }) => {
       return (

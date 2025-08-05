@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFetchScript } from "@/hooks/useFetchScript";
+import { useFetchMarkedScriptsList } from "@/hooks/useFetchMarkedScriptsList";
+import { useFetchMarkedScript } from "@/hooks/useFetchMarkedScript";
+import { useUpdateMark } from "@/hooks/useUpdateMark";
 import { useParams } from "next/navigation";
 
 const Result = () => {
@@ -16,10 +19,80 @@ const Result = () => {
     ? params.scriptId[0]
     : params?.scriptId;
   const { data: script, isLoading, error } = useFetchScript(scriptId);
-  const [number1a, setNumber1a] = useState(10);
-  const [number1b, setNumber1b] = useState(10);
-  const [number1c, setNumber1c] = useState(10);
+
+  // Fetch marked scripts list using the assessment ID from the script
+  const {
+    data: markedScriptsList,
+    isLoading: markedScriptsLoading,
+    error: markedScriptsError,
+  } = useFetchMarkedScriptsList(scriptId);
+
+  // Fetch specific marked script using the first mark_id from the list
+  const {
+    data: markedScript,
+    isLoading: markedScriptLoading,
+    error: markedScriptError,
+  } = useFetchMarkedScript(markedScriptsList?.data?.[0]?.mark_id);
+
+  // Show loading if we're still fetching the marked scripts list
+  const isLoadingData =
+    isLoading || markedScriptsLoading || markedScriptLoading;
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [marks, setMarks] = useState<{ [key: string]: number }>({});
+  const [pendingUpdates, setPendingUpdates] = useState<{
+    [key: string]: NodeJS.Timeout;
+  }>({});
+  const { mutate: updateMark, isPending: isUpdating } = useUpdateMark();
+
+  // Debounced update function
+  const debouncedUpdate = useCallback(
+    (markId: string, markValue: number) => {
+      // Clear existing timeout for this mark
+      if (pendingUpdates[markId]) {
+        clearTimeout(pendingUpdates[markId]);
+      }
+
+      // Set new timeout
+      const timeoutId = setTimeout(() => {
+        updateMark({
+          mark_id: markId,
+          mark: markValue,
+        });
+        setPendingUpdates((prev) => {
+          const newPending = { ...prev };
+          delete newPending[markId];
+          return newPending;
+        });
+      }, 500);
+
+      setPendingUpdates((prev) => ({
+        ...prev,
+        [markId]: timeoutId,
+      }));
+    },
+    [updateMark, pendingUpdates]
+  );
+
+  // Initialize marks when data is loaded
+  useEffect(() => {
+    if (markedScriptsList?.data) {
+      const initialMarks: { [key: string]: number } = {};
+      markedScriptsList.data.forEach((mark) => {
+        initialMarks[mark.mark_id] = mark.awarded_marks;
+      });
+      setMarks(initialMarks);
+    }
+  }, [markedScriptsList?.data]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(pendingUpdates).forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+    };
+  }, [pendingUpdates]);
 
   // Lightbox state and images array
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -29,7 +102,7 @@ const Result = () => {
   return (
     <div className="relative">
       {/* Script fetch demo */}
-      {isLoading && (
+      {isLoadingData && (
         <div className="lg:w-[770px] w-full mx-auto mt-8">
           <div className="flex flex-col justify-center items-center gap-8 text-center animate-pulse">
             <div className="flex flex-col gap-[17px] items-center">
@@ -62,7 +135,11 @@ const Result = () => {
           </div>
         </div>
       )}
-      {error && <div>Error loading script</div>}
+      {(error || markedScriptsError || markedScriptError) && (
+        <div className="text-center text-red-500 mt-8">
+          Error loading script data
+        </div>
+      )}
       <main className="lg:px-[108px] md:px-[20] p-5 overflow-y-auto pb-40">
         <div className="flex justify-between lg:items-center gap-4 mt-2">
           <Image
@@ -78,19 +155,31 @@ const Result = () => {
             <div className="lg:w-[770px] w-full">
               <div className="flex flex-col justify-center items-center gap-8 text-center">
                 <div className="flex flex-col gap-[17px]">
-                  <RadialProgress progress={75} />
+                  <RadialProgress progress={script?.total_mark_awarded || 0} />
                   <p className="text-[#8B8B8B] lg:text-[22px] text-lg font-semibold">
                     Marked score
                   </p>
                 </div>
                 <div className="flex flex-col justify-center items-center bg-white rounded-[14.74px] p-[12.89px] gap-[22.11px]">
-                  <h6 className="text-[#4F4F4F] lg:text-[21.18px] text-lg font-semibold">
-                    Handwritten Answer Scripts
-                  </h6>
+                  <div className="flex flex-col items-center gap-2">
+                    <h6 className="text-[#4F4F4F] lg:text-[21.18px] text-lg font-semibold">
+                      Handwritten Answer Scripts
+                    </h6>
+                    {script?.course?.code && (
+                      <div className="flex items-center gap-2 bg-[#F0F5FF] px-3 py-1 rounded-lg">
+                        <span className="text-[#335CFF] text-sm font-medium">
+                          Course:
+                        </span>
+                        <span className="text-[#171717] text-sm font-semibold">
+                          {script.course.code}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className="grid md:grid-cols-2 grid-cols-1 gap-[16.58px]">
                     {/* Only the left image is clickable for lightbox */}
                     <div
-                      className="relative w-[363.82px] h-[336.56px] rounded-[12.89px] cursor-pointer group"
+                      className="relative md:w-[363.82px] w-full h-[336.56px] rounded-[12.89px] cursor-pointer group"
                       onClick={() => {
                         setLightboxOpen(true);
                       }}
@@ -126,25 +215,19 @@ const Result = () => {
                     </div>
                     <div className="flex flex-col gap-[15.17px] border border-[#F5F5F5] p-[13.82px] rounded-[12.89px] text-start">
                       <h6 className="font-geist text-black font-bold lg:text-lg text-base">
-                        Which of the following element dies not contain neuron?
+                        {markedScript?.data?.question?.text ||
+                          "Loading question..."}
                       </h6>
                       <div className="flex flex-col gap-[7.59px]">
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Saudi Aramco and Siemens Energy ink 15-year contract
-                          for oil field power supply
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Robots could replace hundreds of thousands of oil and
-                          gas jobs, save billions in drilling costs by 2
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Egypt could launch oil and gas exploration bid round
-                          this month
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Oil bubbles up on Saudi supply, demand confidence and
-                          weak dollar
-                        </p>
+                        {markedScript?.data?.extracted_answer ? (
+                          <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
+                            {markedScript.data.extracted_answer}
+                          </p>
+                        ) : (
+                          <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
+                            No answer extracted
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -178,159 +261,92 @@ const Result = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-4 bg-white w-full rounded-[12.38px] border border-[#F5F5F5] p-[13.82px] mt-10">
-              <div className="flex flex-col gap-4">
-                <h6 className="font-geist text-black font-bold lg:text-lg text-base">
-                  1a. Which of the following element dies not contain neuron?
-                </h6>
-                <div className="">
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Saudi Aramco and Siemens Energy ink 15-year contract for oil
-                    field power supply
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Robots could replace hundreds of thousands of oil and gas
-                    jobs, save billions in drilling costs by 2
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Egypt could launch oil and gas exploration bid round this
-                    month
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Oil bubbles up on Saudi supply, demand confidence and weak
-                    dollar
-                  </p>
-                </div>
-                <div
-                  className="flex items-center"
-                  style={{ boxShadow: "0px 10px 10px 3px #9C9C9C05" }}
-                >
-                  <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tl-[22px] rounded-bl-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1a((prev) => Math.max(0, prev - 1))}
-                  >
-                    <Minus className="size-5 text-[#797979]" />
+              {markedScriptsList?.data?.map((mark, index) => (
+                <div key={mark.mark_id} className="flex flex-col gap-4">
+                  <h6 className="font-geist text-black font-bold lg:text-lg text-base">
+                    {mark.question.number}. {mark.question.text}
+                  </h6>
+                  <div className="">
+                    {mark.extracted_answer ? (
+                      <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
+                        {mark.extracted_answer}
+                      </p>
+                    ) : (
+                      <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
+                        No answer extracted
+                      </p>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    value={number1a}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || /^\d+$/.test(value)) {
-                        setNumber1a(value === "" ? 0 : parseInt(value));
-                      }
-                    }}
-                    className="flex justify-center items-center p-3 border-y-2 border-[#F8F8F8] size-11 text-[#333333] text-sm font-medium text-center focus:outline-none"
-                  />
                   <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tr-[22px] rounded-br-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1a((prev) => prev + 1)}
+                    className="flex items-center"
+                    style={{ boxShadow: "0px 10px 10px 3px #9C9C9C05" }}
                   >
-                    <Plus className="size-5 text-[#0089FF] " />
+                    <div
+                      className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tl-[22px] rounded-bl-[22px] size-11 cursor-pointer hover:opacity-90"
+                      onClick={() => {
+                        const currentMark =
+                          marks[mark.mark_id] || mark.awarded_marks;
+                        if (currentMark > 0) {
+                          const newMark = currentMark - 1;
+                          setMarks((prev) => ({
+                            ...prev,
+                            [mark.mark_id]: newMark,
+                          }));
+                          debouncedUpdate(mark.mark_id, newMark);
+                        }
+                      }}
+                    >
+                      <Minus className="size-5 text-[#797979]" />
+                    </div>
+                    <input
+                      type="text"
+                      value={marks[mark.mark_id] || mark.awarded_marks}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d+$/.test(value)) {
+                          const numValue = value === "" ? 0 : parseInt(value);
+                          if (
+                            numValue >= 0 &&
+                            numValue <= mark.question.total_marks
+                          ) {
+                            setMarks((prev) => ({
+                              ...prev,
+                              [mark.mark_id]: numValue,
+                            }));
+                            debouncedUpdate(mark.mark_id, numValue);
+                          }
+                        }
+                      }}
+                      className="flex justify-center items-center p-3 border-y-2 border-[#F8F8F8] size-11 text-[#333333] text-sm font-medium text-center focus:outline-none"
+                    />
+                    <div
+                      className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tr-[22px] rounded-br-[22px] size-11 cursor-pointer hover:opacity-90"
+                      onClick={() => {
+                        const currentMark =
+                          marks[mark.mark_id] || mark.awarded_marks;
+                        if (currentMark < mark.question.total_marks) {
+                          const newMark = currentMark + 1;
+                          setMarks((prev) => ({
+                            ...prev,
+                            [mark.mark_id]: newMark,
+                          }));
+                          debouncedUpdate(mark.mark_id, newMark);
+                        }
+                      }}
+                    >
+                      <Plus className="size-5 text-[#0089FF] " />
+                    </div>
                   </div>
+                  {mark.comment && (
+                    <div className="mt-2 p-3 bg-[#F0F5FF] rounded-lg">
+                      <p className="text-sm text-[#335CFF] font-medium">
+                        Comment:
+                      </p>
+                      <p className="text-sm text-[#171717]">{mark.comment}</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex flex-col gap-4">
-                <h6 className="font-geist text-black font-bold lg:text-lg text-base">
-                  1b. Which of the following element dies not contain neuron?
-                </h6>
-                <div className="">
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Saudi Aramco and Siemens Energy ink 15-year contract for oil
-                    field power supply
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Robots could replace hundreds of thousands of oil and gas
-                    jobs, save billions in drilling costs by 2
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Egypt could launch oil and gas exploration bid round this
-                    month
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Oil bubbles up on Saudi supply, demand confidence and weak
-                    dollar
-                  </p>
-                </div>
-                <div
-                  className="flex items-center"
-                  style={{ boxShadow: "0px 10px 10px 3px #9C9C9C05" }}
-                >
-                  <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tl-[22px] rounded-bl-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1b((prev) => Math.max(0, prev - 1))}
-                  >
-                    <Minus className="size-5 text-[#797979]" />
-                  </div>
-                  <input
-                    type="text"
-                    value={number1b}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || /^\d+$/.test(value)) {
-                        setNumber1b(value === "" ? 0 : parseInt(value));
-                      }
-                    }}
-                    className="flex justify-center items-center p-3 border-y-2 border-[#F8F8F8] size-11 text-[#333333] text-sm font-medium text-center focus:outline-none"
-                  />
-                  <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tr-[22px] rounded-br-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1b((prev) => prev + 1)}
-                  >
-                    <Plus className="size-5 text-[#0089FF] " />
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-4">
-                <h6 className="font-geist text-black font-bold lg:text-lg text-base">
-                  1c. Which of the following element dies not contain neuron?
-                </h6>
-                <div className="">
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Saudi Aramco and Siemens Energy ink 15-year contract for oil
-                    field power supply
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Robots could replace hundreds of thousands of oil and gas
-                    jobs, save billions in drilling costs by 2
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Egypt could launch oil and gas exploration bid round this
-                    month
-                  </p>
-                  <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm leading-[22.21px]">
-                    Oil bubbles up on Saudi supply, demand confidence and weak
-                    dollar
-                  </p>
-                </div>
-                <div
-                  className="flex items-center"
-                  style={{ boxShadow: "0px 10px 10px 3px #9C9C9C05" }}
-                >
-                  <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tl-[22px] rounded-bl-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1c((prev) => Math.max(0, prev - 1))}
-                  >
-                    <Minus className="size-5 text-[#797979]" />
-                  </div>
-                  <input
-                    type="text"
-                    value={number1c}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || /^\d+$/.test(value)) {
-                        setNumber1c(value === "" ? 0 : parseInt(value));
-                      }
-                    }}
-                    className="flex justify-center items-center p-3 border-y-2 border-[#F8F8F8] size-11 text-[#333333] text-sm font-medium text-center focus:outline-none"
-                  />
-                  <div
-                    className="flex justify-center items-center p-3 border-2 border-[#F8F8F8] rounded-tr-[22px] rounded-br-[22px] size-11 cursor-pointer hover:opacity-90"
-                    onClick={() => setNumber1c((prev) => prev + 1)}
-                  >
-                    <Plus className="size-5 text-[#0089FF] " />
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
@@ -389,7 +405,7 @@ const Result = () => {
                 if (currentStep === 1) {
                   setCurrentStep(2);
                 } else {
-                  setCurrentStep(1)
+                  setCurrentStep(1);
                 }
               }}
             >
