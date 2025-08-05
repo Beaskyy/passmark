@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 
-// Define the type for a single mark item
-export interface MarkedScriptMark {
+// Define the type for a single marked script
+export interface MarkedScript {
   mark_id: string;
   script_id: string;
   question_id: string;
@@ -21,21 +21,18 @@ export interface MarkedScriptMark {
 }
 
 // Define the response type
-export interface MarkedScriptsListResponse {
+export interface MarkedScriptResponse {
   status: boolean;
   message: string;
-  count: number;
-  next: string | null;
-  previous: string | null;
-  data: MarkedScriptMark[];
+  data: MarkedScript;
 }
 
-const fetchMarkedScriptsList = async (
+const fetchMarkedScript = async (
   token: string,
   scriptId: string
-): Promise<MarkedScriptsListResponse> => {
+): Promise<MarkedScriptResponse> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/main/script/marks/list/${scriptId}/`,
+    `${process.env.NEXT_PUBLIC_API_URL}/main/script/marks/get/${scriptId}/`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -44,21 +41,21 @@ const fetchMarkedScriptsList = async (
   );
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to fetch marked scripts list");
+    throw new Error(errorData.message || "Failed to fetch marked script");
   }
   return response.json();
 };
 
-export const useFetchMarkedScriptsList = (scriptId?: string) => {
+export const useFetchMarkedScript = (scriptId?: string) => {
   const { data: session } = useSession();
   const token = session?.accessToken;
 
   return useQuery({
-    queryKey: ["markedScriptsList", scriptId],
+    queryKey: ["markedScript", scriptId],
     queryFn: () => {
       if (!token) throw new Error("No access token");
       if (!scriptId) throw new Error("No script ID");
-      return fetchMarkedScriptsList(token, scriptId);
+      return fetchMarkedScript(token, scriptId);
     },
     enabled: !!token && !!scriptId,
   });

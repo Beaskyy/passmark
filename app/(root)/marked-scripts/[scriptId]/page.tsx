@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFetchScript } from "@/hooks/useFetchScript";
+import { useFetchMarkedScriptsList } from "@/hooks/useFetchMarkedScriptsList";
+import { useFetchMarkedScript } from "@/hooks/useFetchMarkedScript";
 import { useParams } from "next/navigation";
 
 const Result = () => {
@@ -16,6 +18,21 @@ const Result = () => {
     ? params.scriptId[0]
     : params?.scriptId;
   const { data: script, isLoading, error } = useFetchScript(scriptId);
+
+  // Fetch marked scripts list using the assessment ID from the script
+  const {
+    data: markedScriptsList,
+    isLoading: markedScriptsLoading,
+    error: markedScriptsError,
+  } = useFetchMarkedScriptsList(scriptId);
+
+  // Fetch specific marked script using the script ID
+  const {
+    data: markedScript,
+    isLoading: markedScriptLoading,
+    error: markedScriptError,
+  } = useFetchMarkedScript(scriptId);
+
   const [number1a, setNumber1a] = useState(10);
   const [number1b, setNumber1b] = useState(10);
   const [number1c, setNumber1c] = useState(10);
@@ -78,19 +95,31 @@ const Result = () => {
             <div className="lg:w-[770px] w-full">
               <div className="flex flex-col justify-center items-center gap-8 text-center">
                 <div className="flex flex-col gap-[17px]">
-                  <RadialProgress progress={75} />
+                  <RadialProgress progress={script?.total_mark_awarded || 0} />
                   <p className="text-[#8B8B8B] lg:text-[22px] text-lg font-semibold">
                     Marked score
                   </p>
                 </div>
                 <div className="flex flex-col justify-center items-center bg-white rounded-[14.74px] p-[12.89px] gap-[22.11px]">
-                  <h6 className="text-[#4F4F4F] lg:text-[21.18px] text-lg font-semibold">
-                    Handwritten Answer Scripts
-                  </h6>
+                  <div className="flex flex-col items-center gap-2">
+                    <h6 className="text-[#4F4F4F] lg:text-[21.18px] text-lg font-semibold">
+                      Handwritten Answer Scripts
+                    </h6>
+                    {script?.course?.code && (
+                      <div className="flex items-center gap-2 bg-[#F0F5FF] px-3 py-1 rounded-lg">
+                        <span className="text-[#335CFF] text-sm font-medium">
+                          Course:
+                        </span>
+                        <span className="text-[#171717] text-sm font-semibold">
+                          {script.course.code}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className="grid md:grid-cols-2 grid-cols-1 gap-[16.58px]">
                     {/* Only the left image is clickable for lightbox */}
                     <div
-                      className="relative w-[363.82px] h-[336.56px] rounded-[12.89px] cursor-pointer group"
+                      className="relative md:w-[363.82px] w-full h-[336.56px] rounded-[12.89px] cursor-pointer group"
                       onClick={() => {
                         setLightboxOpen(true);
                       }}
@@ -126,25 +155,19 @@ const Result = () => {
                     </div>
                     <div className="flex flex-col gap-[15.17px] border border-[#F5F5F5] p-[13.82px] rounded-[12.89px] text-start">
                       <h6 className="font-geist text-black font-bold lg:text-lg text-base">
-                        Which of the following element dies not contain neuron?
+                        {markedScript?.data?.question?.text ||
+                          "Loading question..."}
                       </h6>
                       <div className="flex flex-col gap-[7.59px]">
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Saudi Aramco and Siemens Energy ink 15-year contract
-                          for oil field power supply
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Robots could replace hundreds of thousands of oil and
-                          gas jobs, save billions in drilling costs by 2
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Egypt could launch oil and gas exploration bid round
-                          this month
-                        </p>
-                        <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
-                          Oil bubbles up on Saudi supply, demand confidence and
-                          weak dollar
-                        </p>
+                        {markedScript?.data?.extracted_answer ? (
+                          <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
+                            {markedScript.data.extracted_answer}
+                          </p>
+                        ) : (
+                          <p className="font-geist text-[#9A9A9A] lg:text-[15.66px] text-sm">
+                            No answer extracted
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -389,7 +412,7 @@ const Result = () => {
                 if (currentStep === 1) {
                   setCurrentStep(2);
                 } else {
-                  setCurrentStep(1)
+                  setCurrentStep(1);
                 }
               }}
             >
