@@ -14,7 +14,7 @@ const deleteAssessment = async (
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/assessment/delete/`,
     {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
