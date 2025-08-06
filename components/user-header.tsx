@@ -31,7 +31,7 @@ export default function UserHeader() {
                   : session?.user?.name || "User"}
               </h5>
               <div className="lg:text-sm text-xs text-[#878787] font-medium">
-                What are you marking today?
+                What are you grading today?
               </div>
             </div>
           </>

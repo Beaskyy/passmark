@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/dialog";
 import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
+import { generateSessionOptions } from "@/lib/utils";
 
 // Add Student type
 interface Student {
@@ -120,7 +121,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   const formSchema = z.object({
     title: z.string().min(1, "Course name is required"),
     code: z.string().min(1, "Course code is required"),
-    session: z.string().min(1, "Session is required"),
+    session: z.string().optional(),
     description: z.string().optional(),
   });
 
@@ -447,9 +448,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                       name="session"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            Session <span className="text-[#335CFF]">*</span>
-                          </FormLabel>
+                          <FormLabel>Session</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -460,15 +459,11 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="2024/2025">
-                                2024/2025
-                              </SelectItem>
-                              <SelectItem value="2025/2026">
-                                2025/2026
-                              </SelectItem>
-                              <SelectItem value="2026/2027">
-                                2026/2027
-                              </SelectItem>
+                              {generateSessionOptions().map((session) => (
+                                <SelectItem key={session} value={session}>
+                                  {session}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -488,7 +483,10 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                           </span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="eg, BSE 101" {...field} />
+                          <Input
+                            placeholder="eg, This course is designed to introduce students to the basics of business education."
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

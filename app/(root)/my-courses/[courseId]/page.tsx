@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/dialog";
 import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
+import { generateSessionOptions } from "@/lib/utils";
 
 // Add Student type
 interface Student {
@@ -120,7 +121,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
   const formSchema = z.object({
     title: z.string().min(1, "Course name is required"),
     code: z.string().min(1, "Course code is required"),
-    session: z.string().min(1, "Session is required"),
+    session: z.string().optional(),
     description: z.string().optional(),
   });
 
@@ -140,127 +141,6 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
         return { yearColor: "#335CFF", pillBg: "#EBF1FF" };
     }
   };
-
-  const studentColumns = [
-    {
-      id: "select",
-      header: ({ table }: { table: Table<Student> }) => (
-        <Checkbox
-          checked={table.getIsAllRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-          aria-label="Select all"
-          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
-        />
-      ),
-      cell: ({ row }: { row: Row<Student> }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
-        />
-      ),
-    },
-    {
-      accessorKey: "name",
-      header: ({ column }: { column: any }) => (
-        <div
-          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Student Name
-          <Image
-            src="/images/up-down-fill.svg"
-            alt="up-down-fill"
-            width={20}
-            height={20}
-            style={{
-              transform:
-                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
-              opacity: column.getIsSorted() ? 1 : 0.5,
-            }}
-          />
-        </div>
-      ),
-      cell: ({ row }: { row: Row<Student> }) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#C0D5FF] flex items-center justify-center text-sm font-medium text-[#122368]">
-            {getInitials(row.original.name)}
-          </div>
-          <span className="font-medium text-[#171717]">
-            {row.original.name}
-          </span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "studentId",
-      header: ({ column }: { column: any }) => (
-        <div
-          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Student&apos;s ID
-          <Image
-            src="/images/up-down-fill.svg"
-            alt="up-down-fill"
-            width={20}
-            height={20}
-            style={{
-              transform:
-                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
-              opacity: column.getIsSorted() ? 1 : 0.5,
-            }}
-          />
-        </div>
-      ),
-      cell: ({ row }: { row: Row<Student> }) => (
-        <span className="text-[#171717]">{row.original.studentId}</span>
-      ),
-    },
-    {
-      accessorKey: "dateAdded",
-      header: ({ column }: { column: any }) => (
-        <div
-          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date Added
-          <Image
-            src="/images/up-down-fill.svg"
-            alt="up-down-fill"
-            width={20}
-            height={20}
-            style={{
-              transform:
-                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
-              opacity: column.getIsSorted() ? 1 : 0.5,
-            }}
-          />
-        </div>
-      ),
-      cell: ({ row }: { row: Row<Student> }) => (
-        <span className="text-[#171717]">
-          {formatDate(row.original.dateAdded)}
-        </span>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <div>Actions</div>,
-      cell: ({ row }: { row: Row<Student> }) => (
-        <button
-          className="bg-white border border-[#F63636] text-[#F63636] rounded-lg px-4 py-1.5 font-medium text-sm hover:bg-[#FFF0F0] transition-all"
-          onClick={() => {
-            setStudentToDelete(row.original);
-            setDeleteDialogOpen(true);
-          }}
-        >
-          Delete Student
-        </button>
-      ),
-    },
-  ];
 
   const handleDelete = (course_id: string) => {
     setCourseToDelete(course_id);
@@ -482,9 +362,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                       name="session"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            Session <span className="text-[#335CFF]">*</span>
-                          </FormLabel>
+                          <FormLabel>Session</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -495,15 +373,11 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="2024/2025">
-                                2024/2025
-                              </SelectItem>
-                              <SelectItem value="2025/2026">
-                                2025/2026
-                              </SelectItem>
-                              <SelectItem value="2026/2027">
-                                2026/2027
-                              </SelectItem>
+                              {generateSessionOptions().map((session) => (
+                                <SelectItem key={session} value={session}>
+                                  {session}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -523,7 +397,10 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
                           </span>
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="eg, BSE 101" {...field} />
+                          <Input
+                            placeholder="eg, This course is designed to introduce students to the basics of business education."
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

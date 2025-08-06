@@ -87,24 +87,6 @@ export const columns: ColumnDef<UnitHistory>[] = [
     cell: ({ row }) => <span>{row.original.amountPaid}</span>,
   },
   {
-    accessorKey: "transactionId",
-    header: ({ column }) => (
-      <div
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="flex items-center gap-0.5 cursor-pointer"
-      >
-        Transaction ID
-        <Image
-          src="/images/up-down-fill.svg"
-          alt="up-down-fill"
-          width={20}
-          height={20}
-        />
-      </div>
-    ),
-    cell: ({ row }) => <span>{row.original.transactionId}</span>,
-  },
-  {
     accessorKey: "transactionDate",
     header: ({ column }) => (
       <div
