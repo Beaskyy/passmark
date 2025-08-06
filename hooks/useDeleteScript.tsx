@@ -9,7 +9,7 @@ const deleteScript = async (token: string, payload: DeleteScriptPayload) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/script/delete/`,
     {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

@@ -155,7 +155,21 @@ const Result = () => {
             <div className="lg:w-[770px] w-full">
               <div className="flex flex-col justify-center items-center gap-8 text-center">
                 <div className="flex flex-col gap-[17px]">
-                  <RadialProgress progress={script?.total_mark_awarded || 0} />
+                  <RadialProgress
+                    progress={
+                      markedScriptsList?.data && script?.total_mark_awarded
+                        ? Math.round(
+                            (script.total_mark_awarded /
+                              markedScriptsList.data.reduce(
+                                (total, mark) =>
+                                  total + mark.question.total_marks,
+                                0
+                              )) *
+                              100
+                          )
+                        : 0
+                    }
+                  />
                   <p className="text-[#8B8B8B] lg:text-[22px] text-lg font-semibold">
                     Marked score
                   </p>

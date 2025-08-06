@@ -79,7 +79,9 @@ const ScriptId = ({
             <DropdownMenuContent className="w-[183px] py-3">
               <DropdownMenuLabel
                 onClick={() => {
-                  router.push(`/my-courses/${courseId}/assessments/edit/${assessmentDetails?.data?.assessment_id}`)
+                  router.push(
+                    `/my-courses/${courseId}/assessments/edit/${assessmentDetails?.data?.assessment_id}`
+                  );
                 }}
                 className="cursor-pointer"
               >
@@ -115,9 +117,9 @@ const ScriptId = ({
             data={tableData}
             searchKey="scriptUploaded"
             tableName="Recently marked scripts"
-            getId={(row) => row.student_id}
+            getId={(row) => row.script_id}
             onRowClick={(row: any) =>
-              router.push(`/marked-scripts/${row.studentId}`)
+              router.push(`/marked-scripts/${row.script_id}`)
             }
           />
         </div>

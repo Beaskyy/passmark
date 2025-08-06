@@ -16,7 +16,7 @@ const deletePenalty = async (
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/penalty/delete/`,
     {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
