@@ -12,13 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAccount } from "@/providers/AccountProvider";
+import { useFetchProfileSummary } from "@/hooks/useFetchProfileSummary";
 import { Eye, EyeClosed } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
+import { useSession } from "next-auth/react";
 
 const Profile = () => {
   const { user, isLoading } = useAccount();
+  const { data: session } = useSession();
+  const { data: profileSummary, isLoading: isProfileLoading } =
+    useFetchProfileSummary();
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -71,7 +76,7 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return <ProfileSkeleton />;
   }
 
@@ -84,12 +89,17 @@ const Profile = () => {
           </h4>
           <div className="flex lg:flex-row flex-col justify-between lg:items-center py-4 px-[22px] bg-[#F0F3FF] rounded-[10px] gap-4">
             <div className="flex items-center gap-[18px]">
-              <Image
-                src="/images/profile.svg"
-                alt="profile"
-                width={32}
-                height={32}
-              />
+            <Image
+                  src={
+                    session?.user?.image
+                      ? session?.user?.image
+                      : "/images/profile.svg"
+                  }
+                  alt="profile"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
               <div className="flex flex-col">
                 <h5 className="text-[#171717] lg:text-base text-sm font-semibold">
                   {user?.firstname} {user?.lastname}
@@ -224,7 +234,8 @@ const Profile = () => {
             <div className="flex justify-between items-center bg-white shadow-sm p-[22px] rounded-[10px]">
               <div className="flex flex-col gap-2">
                 <h4 className="text-black lg:text-base text-sm lg:font-bold font-semibold">
-                  232,343
+                  {profileSummary?.summary.total_scripts?.toLocaleString() ||
+                    "0"}
                 </h4>
                 <p className="text-[#939393] lg:text-base text-sm font-medium">
                   Total Scripts
@@ -240,7 +251,8 @@ const Profile = () => {
             <div className="flex justify-between items-center bg-white shadow-sm p-[22px] rounded-[10px]">
               <div className="flex flex-col gap-2">
                 <h4 className="text-black lg:text-base text-sm lg:font-bold font-semibold">
-                  123
+                  {profileSummary?.summary.pending_scripts?.toLocaleString() ||
+                    "0"}
                 </h4>
                 <p className="text-[#939393] lg:text-base text-sm font-medium">
                   Pending Approvals
@@ -251,7 +263,8 @@ const Profile = () => {
             <div className="flex justify-between items-center bg-white shadow-sm p-[22px] rounded-[10px]">
               <div className="flex flex-col gap-2">
                 <h4 className="text-black lg:text-base text-sm lg:font-bold font-semibold">
-                  1,345 Students
+                  {profileSummary?.summary.total_students?.toLocaleString() ||
+                    "0"}
                 </h4>
                 <p className="text-[#939393] lg:text-base text-sm font-medium">
                   Total Students
