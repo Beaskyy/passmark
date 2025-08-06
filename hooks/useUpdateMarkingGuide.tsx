@@ -21,7 +21,7 @@ const updateMarkingGuide = async (
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/marking-guide/update/`,
     {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,

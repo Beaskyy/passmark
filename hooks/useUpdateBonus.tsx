@@ -20,7 +20,7 @@ const updateBonus = async (
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/main/bonus/update/`,
     {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
