@@ -1,11 +1,13 @@
 interface RadialProgressProps {
   progress: number; // 0 - 100
+  displayValue?: string | number; // Custom value to display in center
   size?: number;
   strokeWidth?: number;
 }
 
 const RadialProgress: React.FC<RadialProgressProps> = ({
   progress,
+  displayValue,
   size = 74,
   strokeWidth = 7,
 }) => {
@@ -50,7 +52,7 @@ const RadialProgress: React.FC<RadialProgressProps> = ({
         />
       </svg>
       <span className="absolute text-[26px] font-bold text-black">
-        {progress}
+        {displayValue !== undefined ? displayValue : progress}
       </span>
     </div>
   );
