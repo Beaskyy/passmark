@@ -81,6 +81,9 @@ export const useUpdateMark = () => {
       queryClient.invalidateQueries({
         queryKey: ["scripts"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["script"],
+      });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update mark");
