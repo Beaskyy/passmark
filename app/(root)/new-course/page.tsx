@@ -32,6 +32,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
+import { generateSessionOptions } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(3, {
@@ -40,7 +41,7 @@ const formSchema = z.object({
   code: z.string().min(3, {
     message: "The course code must be at least 3 characters",
   }),
-  session: z.string().min(1, { message: "Please select a session" }),
+  session: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -48,6 +49,8 @@ const NewCourse = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const { user } = useAccount();
+
+  const sessionOptions = generateSessionOptions();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -158,9 +161,7 @@ const NewCourse = () => {
                 name="session"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Session <span className="text-[#335CFF]">*</span>
-                    </FormLabel>
+                    <FormLabel>Session</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -171,9 +172,11 @@ const NewCourse = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="2024/2025">2024/2025</SelectItem>
-                        <SelectItem value="2025/2026">2025/2026</SelectItem>
-                        <SelectItem value="2026/2027">2026/2027</SelectItem>
+                        {sessionOptions.map((session) => (
+                          <SelectItem key={session} value={session}>
+                            {session}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -193,7 +196,10 @@ const NewCourse = () => {
                     </span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="eg, BSE 101" {...field} />
+                    <Input
+                      placeholder="eg, This course is designed to introduce students to the basics of business education."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

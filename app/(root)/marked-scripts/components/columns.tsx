@@ -129,7 +129,9 @@ export const columns: ColumnDef<MarkedScript>[] = [
         </div>
       );
     },
-    cell: ({ row }) => row.original?.course?.code,
+    cell: ({ row }) => (
+      <span className="uppercase">{row.original?.course?.code}</span>
+    )
   },
   {
     accessorKey: "studentScore",
@@ -150,7 +152,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <span>{row.original?.total_mark_awarded || 0} Points</span>
+      <span>{row.original?.total_mark_awarded || 0}</span>
     ),
   },
   {

@@ -162,7 +162,7 @@ const ScriptId = ({
           image="/images/empty-state.svg"
           title="No Marked Script"
           desc="You've not marked any script yet"
-          link="/assessment"
+          link={`/my-courses/${courseId}/${scriptId}/upload-script`}
           buttonText="Mark New Script"
           showIcon={false}
         />
@@ -251,7 +251,7 @@ const ScriptId = ({
                           data.message || "Assessment deleted successfully"
                         );
                         setDeleteDialogOpen(false);
-                        // Optionally: router.push or refetch
+                        router.push(`/my-courses/${courseId}`);
                       },
                       onError: (error) => {
                         toast.error(

@@ -73,15 +73,16 @@ export const Header = () => {
             ))}
           </div>
         </div>
-        <div className="hidden lg:flex items-center lg:gap-4 gap-1">
+        <div className="flex items-center lg:gap-4 gap-1">
           <Image
             src="/images/notification.svg"
             alt="notification"
             width={40}
             height={40}
+            className="hidden lg:flex"
           />
           <Popover>
-            <PopoverTrigger className="flex justify-center items-center gap-1.5 h-10 pl-[9px] pr-3 py-1.5 border border-[#F6F6F6] rounded-[22px] bg-[#FBFBFB]">
+            <PopoverTrigger className="flex justify-center items-center gap-1.5 md:h-10 h-8 pl-[9px] pr-3 py-1.5 border border-[#F6F6F6] rounded-[22px] bg-[#FBFBFB]">
               <div className="flex justify-center items-center gap-2">
                 <Image
                   src="/images/coin.svg"
@@ -126,9 +127,10 @@ export const Header = () => {
                       Total Units
                     </p>
                     <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
-                    {Number(
-                      creditBalance?.total_earned_credits
-                    ).toLocaleString()} UNITS
+                      {Number(
+                        creditBalance?.total_earned_credits
+                      ).toLocaleString()}{" "}
+                      UNITS
                     </p>
                   </div>
                   <div className="h-[1px] bg-[#F7F7F7]"></div>
@@ -137,9 +139,10 @@ export const Header = () => {
                       Used Units
                     </p>
                     <p className="lg:text-[13px] text-xs text-[#777777] font-semibold tracking-[2%] uppercase">
-                    {Number(
-                      creditBalance?.total_spent_credits
-                    ).toLocaleString()} UNITS
+                      {Number(
+                        creditBalance?.total_spent_credits
+                      ).toLocaleString()}{" "}
+                      UNITS
                     </p>
                   </div>
                 </div>
@@ -182,7 +185,7 @@ export const Header = () => {
             </PopoverContent>
           </Popover>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1.5 h-10 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
+            <DropdownMenuTrigger className="hidden lg:flex justify-center items-center gap-1.5 h-10 pl-1 pr-2 border border-[#EBEBEB] rounded-[22px]">
               <div className="flex justify-center items-center gap-2">
                 <Image
                   src={
