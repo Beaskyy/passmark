@@ -29,6 +29,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useDeleteAssessment } from "@/hooks/useDeleteAssessment";
+import { useAcceptScript } from "@/hooks/useAcceptScript";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ScriptId = ({
   params,
@@ -46,6 +48,37 @@ const ScriptId = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { mutate: deleteAssessment, isPending: isDeleting } =
     useDeleteAssessment();
+
+  // Approve modal state and logic
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [selectedScriptId, setSelectedScriptId] = useState<string | null>(null);
+  const { mutate: acceptScript, isPending: isAccepting } = useAcceptScript();
+  const queryClient = useQueryClient();
+
+  const handleApprove = (script_id: string) => {
+    setSelectedScriptId(script_id);
+    setApproveDialogOpen(true);
+  };
+
+  const handleApproveConfirm = () => {
+    if (!selectedScriptId) return;
+    acceptScript(
+      { script_id: selectedScriptId },
+      {
+        onSuccess: () => {
+          toast.success("Script approved successfully");
+          setApproveDialogOpen(false);
+          setSelectedScriptId(null);
+          queryClient.invalidateQueries({
+            queryKey: ["assessmentScriptList", scriptId],
+          });
+        },
+        onError: (error: any) => {
+          toast.error(error.message || "Failed to approve script");
+        },
+      }
+    );
+  };
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
@@ -121,6 +154,7 @@ const ScriptId = ({
             onRowClick={(row: any) =>
               router.push(`/marked-scripts/${row.script_id}`)
             }
+            meta={{ onApprove: handleApprove }}
           />
         </div>
       ) : (
@@ -133,6 +167,49 @@ const ScriptId = ({
           showIcon={false}
         />
       )}
+
+      {/* Approve Confirmation Dialog */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent
+          className="max-w-[357px] px-5 py-4 text-center"
+          style={{ borderRadius: "20px" }}
+        >
+          <div className="flex flex-col items-center">
+            <div className="bg-[#FEEDE1] rounded-[10px] p-2 w-10 h-10 flex items-center justify-center mb-4">
+              <Image
+                src="/images/alert.svg"
+                alt="alert"
+                width={40}
+                height={40}
+              />
+            </div>
+            <DialogTitle className="text-base text-[#171717] font-semibold mb-2">
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription className="text-sm mb-6 text-[#8C8C8C]">
+              Kindly confirm that you want to approve this script.
+            </DialogDescription>
+            <div className="flex gap-3 w-full justify-center">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  className="w-1/2 border-none  lg:h-10 h-8 bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-sm text-xs tracking-[1.5%] rounded-[10px] lg:font-semibold font-medium hover:bg-[#F0F3FF] hover:text-primary"
+                >
+                  No, Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                className="w-1/2 bg-[#335CFF] hover:bg-[#2346A0] flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium"
+                disabled={isAccepting}
+                onClick={handleApproveConfirm}
+              >
+                {isAccepting ? "Approving..." : "Yes, Approve"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent
           className="max-w-[357px] px-5 py-4 text-center"

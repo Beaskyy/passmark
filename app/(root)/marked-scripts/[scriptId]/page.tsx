@@ -101,36 +101,48 @@ const Result = () => {
 
   return (
     <div className="relative">
-      {/* Script fetch demo */}
+      {/* Loading skeleton */}
       {isLoadingData && (
-        <div className="lg:w-[770px] w-full mx-auto mt-8">
-          <div className="flex flex-col justify-center items-center gap-8 text-center animate-pulse">
-            <div className="flex flex-col gap-[17px] items-center">
-              <div className="rounded-full bg-gray-200 h-24 w-24 mb-2" />
-              <div className="h-6 w-32 bg-gray-200 rounded mb-2" />
-            </div>
-            <div className="flex flex-col justify-center items-center bg-white rounded-[14.74px] p-[12.89px] gap-[22.11px] w-full">
-              <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
-              <div className="grid md:grid-cols-2 grid-cols-1 gap-[16.58px] w-full">
-                <div className="relative w-[363.82px] h-[336.56px] rounded-[12.89px] bg-gray-200" />
-                <div className="flex flex-col gap-[15.17px] border border-[#F5F5F5] p-[13.82px] rounded-[12.89px] text-start w-full">
-                  <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 w-full bg-gray-100 rounded mb-1" />
-                  <div className="h-4 w-5/6 bg-gray-100 rounded mb-1" />
-                  <div className="h-4 w-2/3 bg-gray-100 rounded mb-1" />
-                  <div className="h-4 w-1/2 bg-gray-100 rounded" />
+        <div className="lg:px-[108px] md:px-[20] p-5 overflow-y-auto pb-40">
+          <div className="flex justify-between lg:items-center gap-4 mt-2">
+            <div className="w-11 h-11 bg-gray-200 rounded animate-pulse" />
+          </div>
+          <div className="flex flex-col justify-center items-center">
+            <div className="lg:w-[770px] w-full">
+              <div className="flex flex-col justify-center items-center gap-8 text-center animate-pulse">
+                <div className="flex flex-col gap-[17px] items-center">
+                  <div className="rounded-full bg-gray-200 h-[100px] w-[100px] mb-2" />
+                  <div className="h-6 w-32 bg-gray-200 rounded mb-2" />
+                </div>
+                <div className="flex flex-col justify-center items-center bg-white rounded-[14.74px] p-[12.89px] gap-[22.11px] w-full">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-6 w-48 bg-gray-200 rounded mb-2" />
+                    <div className="h-8 w-24 bg-gray-200 rounded" />
+                  </div>
+                  <div className="grid md:grid-cols-2 grid-cols-1 gap-[16.58px] w-full">
+                    <div className="relative md:w-[363.82px] w-full h-[336.56px] rounded-[12.89px] bg-gray-200" />
+                    <div className="flex flex-col gap-[15.17px] border border-[#F5F5F5] p-[13.82px] rounded-[12.89px] text-start w-full">
+                      <div className="h-5 w-3/4 bg-gray-200 rounded mb-2" />
+                      <div className="h-4 w-full bg-gray-100 rounded mb-1" />
+                      <div className="h-4 w-5/6 bg-gray-100 rounded mb-1" />
+                      <div className="h-4 w-2/3 bg-gray-100 rounded mb-1" />
+                      <div className="h-4 w-1/2 bg-gray-100 rounded" />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-[#F0F5FF] p-3.5 rounded-xl w-full">
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="flex gap-2 items-center">
+                      <div className="bg-gray-200 rounded-full h-6 w-6" />
+                      <div className="flex flex-col gap-1.5 text-start">
+                        <div className="h-4 w-24 bg-gray-200 rounded mb-1" />
+                        <div className="h-3 w-64 bg-gray-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="w-[92px] h-[34px] bg-gray-200 rounded-[10px]" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="bg-[#F0F5FF] p-3.5 rounded-xl w-full flex items-center gap-2">
-              <div className="flex gap-2 items-center">
-                <div className="bg-gray-200 rounded-full h-6 w-6" />
-                <div className="flex flex-col gap-1.5 text-start">
-                  <div className="h-4 w-24 bg-gray-200 rounded mb-1" />
-                  <div className="h-3 w-64 bg-gray-100 rounded" />
-                </div>
-              </div>
-              <div className="w-[92px] h-[34px] bg-gray-200 rounded-[10px] ml-auto" />
             </div>
           </div>
         </div>
@@ -156,6 +168,7 @@ const Result = () => {
               <div className="flex flex-col justify-center items-center gap-8 text-center">
                 <div className="flex flex-col gap-[17px]">
                   <RadialProgress
+                    size={100}
                     progress={
                       markedScriptsList?.data && script?.total_mark_awarded
                         ? Math.round(
@@ -169,6 +182,12 @@ const Result = () => {
                           )
                         : 0
                     }
+                    displayValue={`${script?.total_mark_awarded || 0}/${
+                      markedScriptsList?.data?.reduce(
+                        (total, mark) => total + mark.question.total_marks,
+                        0
+                      ) || 0
+                    }`}
                   />
                   <p className="text-[#8B8B8B] lg:text-[22px] text-lg font-semibold">
                     Marked score
@@ -260,13 +279,14 @@ const Result = () => {
                           Grading and Review
                         </h6>
                         <p className="text-[#747474] text-xs font-medium max-w-[550px]">
-                          Solid effort with a 75%. You understand the basics,
-                          but review key concepts for stronger accuracy. Keep it
-                          up!
+                          {script?.marked_comment || "No comment"}
                         </p>
                       </div>
                     </div>
-                    <Button className="w-[92px] md:text-[13px] !h-[34px] !text-xs rounded-[10px] py-[7px] px-2 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 font-semibold">
+                    <Button
+                      onClick={() => setCurrentStep(2)}
+                      className="w-[92px] md:text-[13px] !h-[34px] !text-xs rounded-[10px] py-[7px] px-2 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 font-semibold"
+                    >
                       Edit Review
                     </Button>
                   </div>
@@ -425,16 +445,18 @@ const Result = () => {
             >
               {currentStep === 1 ? "Edit Markings" : "Go Back"}
             </Button>
-            <Button
-              className="!h-10 md:text-sm text-xs rounded-[10px] bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 font-medium hover:opacity-90"
-              onClick={() => {
-                if (currentStep > 1) {
-                  setCurrentStep(1);
-                }
-              }}
-            >
-              {currentStep === 1 ? "Approve & Save" : "Update"}
-            </Button>
+            {script?.status !== "completed" && (
+              <Button
+                className="!h-10 md:text-sm text-xs rounded-[10px] bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 font-medium hover:opacity-90"
+                onClick={() => {
+                  if (currentStep > 1) {
+                    setCurrentStep(1);
+                  }
+                }}
+              >
+                {currentStep === 1 ? "Approve & Save" : "Update"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
