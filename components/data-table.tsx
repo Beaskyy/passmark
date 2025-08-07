@@ -259,147 +259,149 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-        <div className="px-[22px] py-3 rounded-[20px] bg-white">
-          <div className="flex justify-between items-center gap-8">
-            <p className="lg:block hidden text-[#5C5C5C] lg:text-sm text-xs whitespace-nowrap">
-              Page {pageIndex + 1} of {table.getPageCount()}
-            </p>
-            <Pagination>
-              <div className="flex justify-center items-center border border-[#EBEBEB] rounded-lg w-fit h-8 text-[#5C5C5C]">
-                <div
-                  className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
-                    table.getCanPreviousPage()
-                      ? "cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                  onClick={() =>
-                    table.getCanPreviousPage() && table.setPageIndex(0)
-                  }
-                >
-                  <ChevronsLeft className="size-5" />
-                </div>
-                <div
-                  className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
-                    table.getCanPreviousPage()
-                      ? "cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                  onClick={() =>
-                    table.getCanPreviousPage() && table.previousPage()
-                  }
-                >
-                  <ChevronLeft className="size-5" />
-                </div>
-                {(() => {
-                  const totalPages = table.getPageCount();
-                  const currentPage = pageIndex + 1;
-                  const pages = [];
+        {table.getPageCount() >= 2 && (
+          <div className="px-[22px] py-3 rounded-[20px] bg-white">
+            <div className="flex justify-between items-center gap-8">
+              <p className="lg:block hidden text-[#5C5C5C] lg:text-sm text-xs whitespace-nowrap">
+                Page {pageIndex + 1} of {table.getPageCount()}
+              </p>
+              <Pagination>
+                <div className="flex justify-center items-center border border-[#EBEBEB] rounded-lg w-fit h-8 text-[#5C5C5C]">
+                  <div
+                    className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
+                      table.getCanPreviousPage()
+                        ? "cursor-pointer"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                    onClick={() =>
+                      table.getCanPreviousPage() && table.setPageIndex(0)
+                    }
+                  >
+                    <ChevronsLeft className="size-5" />
+                  </div>
+                  <div
+                    className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
+                      table.getCanPreviousPage()
+                        ? "cursor-pointer"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                    onClick={() =>
+                      table.getCanPreviousPage() && table.previousPage()
+                    }
+                  >
+                    <ChevronLeft className="size-5" />
+                  </div>
+                  {(() => {
+                    const totalPages = table.getPageCount();
+                    const currentPage = pageIndex + 1;
+                    const pages = [];
 
-                  // Always show first page
-                  pages.push(
-                    <div
-                      key={1}
-                      className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium cursor-pointer ${
-                        currentPage === 1 ? "bg-[#F7F7F7] border-y" : ""
-                      }`}
-                      onClick={() => table.setPageIndex(0)}
-                    >
-                      1
-                    </div>
-                  );
-
-                  // Calculate range around current page
-                  let startPage = Math.max(2, currentPage - 1);
-                  let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-                  // Add ellipsis after first page if needed
-                  if (startPage > 2) {
+                    // Always show first page
                     pages.push(
                       <div
-                        key="ellipsis1"
-                        className="flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium"
-                      >
-                        <Ellipsis className="size-5" />
-                      </div>
-                    );
-                  }
-
-                  // Add middle pages
-                  for (let i = startPage; i <= endPage; i++) {
-                    pages.push(
-                      <div
-                        key={i}
+                        key={1}
                         className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium cursor-pointer ${
-                          currentPage === i ? "bg-[#F7F7F7] border-y" : ""
+                          currentPage === 1 ? "bg-[#F7F7F7] border-y" : ""
                         }`}
-                        onClick={() => table.setPageIndex(i - 1)}
+                        onClick={() => table.setPageIndex(0)}
                       >
-                        {i}
+                        1
                       </div>
                     );
-                  }
 
-                  // Add ellipsis before last page if needed
-                  if (endPage < totalPages - 1) {
-                    pages.push(
-                      <div
-                        key="ellipsis2"
-                        className="flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium"
-                      >
-                        <Ellipsis className="size-5" />
-                      </div>
-                    );
-                  }
+                    // Calculate range around current page
+                    let startPage = Math.max(2, currentPage - 1);
+                    let endPage = Math.min(totalPages - 1, currentPage + 1);
 
-                  // Always show last page if there is more than one page
-                  if (totalPages > 1) {
-                    pages.push(
-                      <div
-                        key={totalPages}
-                        className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium cursor-pointer ${
-                          currentPage === totalPages
-                            ? "bg-[#F7F7F7] border-y"
-                            : ""
-                        }`}
-                        onClick={() => table.setPageIndex(totalPages - 1)}
-                      >
-                        {totalPages}
-                      </div>
-                    );
-                  }
+                    // Add ellipsis after first page if needed
+                    if (startPage > 2) {
+                      pages.push(
+                        <div
+                          key="ellipsis1"
+                          className="flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium"
+                        >
+                          <Ellipsis className="size-5" />
+                        </div>
+                      );
+                    }
 
-                  return pages;
-                })()}
-                <div
-                  className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
-                    table.getCanNextPage()
-                      ? "cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                  onClick={() => table.getCanNextPage() && table.nextPage()}
-                >
-                  <ChevronRight className="size-5 w-10" />
+                    // Add middle pages
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <div
+                          key={i}
+                          className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium cursor-pointer ${
+                            currentPage === i ? "bg-[#F7F7F7] border-y" : ""
+                          }`}
+                          onClick={() => table.setPageIndex(i - 1)}
+                        >
+                          {i}
+                        </div>
+                      );
+                    }
+
+                    // Add ellipsis before last page if needed
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <div
+                          key="ellipsis2"
+                          className="flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium"
+                        >
+                          <Ellipsis className="size-5" />
+                        </div>
+                      );
+                    }
+
+                    // Always show last page if there is more than one page
+                    if (totalPages > 1) {
+                      pages.push(
+                        <div
+                          key={totalPages}
+                          className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 lg:text-sm text-xs font-medium cursor-pointer ${
+                            currentPage === totalPages
+                              ? "bg-[#F7F7F7] border-y"
+                              : ""
+                          }`}
+                          onClick={() => table.setPageIndex(totalPages - 1)}
+                        >
+                          {totalPages}
+                        </div>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+                  <div
+                    className={`flex justify-center items-center border-r border-[#EBEBEB] h-8 w-10 ${
+                      table.getCanNextPage()
+                        ? "cursor-pointer"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                    onClick={() => table.getCanNextPage() && table.nextPage()}
+                  >
+                    <ChevronRight className="size-5 w-10" />
+                  </div>
+                  <div
+                    className={`flex justify-center items-center h-8 w-10 ${
+                      table.getCanNextPage()
+                        ? "cursor-pointer"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                    onClick={() =>
+                      table.getCanNextPage() &&
+                      table.setPageIndex(table.getPageCount() - 1)
+                    }
+                  >
+                    <ChevronsRight className="size-5 w-10" />
+                  </div>
                 </div>
-                <div
-                  className={`flex justify-center items-center h-8 w-10 ${
-                    table.getCanNextPage()
-                      ? "cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                  onClick={() =>
-                    table.getCanNextPage() &&
-                    table.setPageIndex(table.getPageCount() - 1)
-                  }
-                >
-                  <ChevronsRight className="size-5 w-10" />
-                </div>
+              </Pagination>
+              <div className="lg:flex hidden justify-center items-center whitespace-nowrap w-[57px] h-8 rounded-lg py-1.5 px-2.5 border border-[#EBEBEB] shadow-sm lg:text-sm text-xs font-medium tracking-[-0.09px]">
+                {pageIndex + 1} / {table.getPageCount()}
               </div>
-            </Pagination>
-            <div className="lg:flex hidden justify-center items-center whitespace-nowrap w-[57px] h-8 rounded-lg py-1.5 px-2.5 border border-[#EBEBEB] shadow-sm lg:text-sm text-xs font-medium tracking-[-0.09px]">
-              {pageIndex + 1} / {table.getPageCount()}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
