@@ -11,6 +11,7 @@ export type MarkedScript = {
     assessment_id: string;
     title: string;
     description: string;
+    total_marks: number;
   };
   course_id: string;
   course: {

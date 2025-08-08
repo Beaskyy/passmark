@@ -216,7 +216,10 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <span>{row.original?.total_mark_awarded || "Null"}</span>
+      <span>
+        {`${row.original?.total_mark_awarded} / ${row.original?.assessment?.total_marks}` ||
+          "Null"}
+      </span>
     ),
   },
   {

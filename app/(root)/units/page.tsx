@@ -256,6 +256,7 @@ const Units = () => {
             link="/units"
             buttonText="Buy Units"
             showIcon
+            onClick={() => setIsDialogOpen(true)}
           />
         ) : (
           <DataTable

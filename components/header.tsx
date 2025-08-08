@@ -27,6 +27,7 @@ export const Header = () => {
   const { data: session } = useSession();
   const { user, isLoading } = useAccount();
   const [showUnits, setShowUnits] = useState(false);
+  const [showUnitPopover, setShowUnitPopover] = useState(false);
   const { data: creditBalance, isLoading: isCreditLoading } =
     useFetchOrganisationCreditBalance();
 
@@ -81,7 +82,7 @@ export const Header = () => {
             height={40}
             className="hidden lg:flex"
           />
-          <Popover>
+          <Popover open={showUnitPopover} onOpenChange={setShowUnitPopover}>
             <PopoverTrigger className="flex justify-center items-center gap-1.5 md:h-10 h-8 pl-[9px] pr-3 py-1.5 border border-[#F6F6F6] rounded-[22px] bg-[#FBFBFB]">
               <div className="flex justify-center items-center gap-2">
                 <Image
@@ -158,7 +159,10 @@ export const Header = () => {
                     Go Back
                   </Button>
                   <Button
-                    onClick={() => router.push("/units")}
+                    onClick={() => {
+                      setShowUnitPopover(false);
+                      router.push("/units");
+                    }}
                     className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
                   >
                     Unit History
@@ -175,7 +179,10 @@ export const Header = () => {
                     More Details
                   </Button>
                   <Button
-                    onClick={() => router.push("/units")}
+                    onClick={() => {
+                      setShowUnitPopover(false);
+                      router.push("/units");
+                    }}
                     className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-full cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
                   >
                     Buy Units
