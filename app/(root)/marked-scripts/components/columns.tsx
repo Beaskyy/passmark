@@ -131,7 +131,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
     },
     cell: ({ row }) => (
       <span className="uppercase">{row.original?.course?.code}</span>
-    )
+    ),
   },
   {
     accessorKey: "studentScore",
@@ -152,7 +152,13 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <span>{row.original?.total_mark_awarded || 0}</span>
+      <span>
+        {" "}
+        <span>
+          {`${row.original?.total_mark_awarded} / ${row.original?.assessment?.total_marks}` ||
+            "Null"}
+        </span>
+      </span>
     ),
   },
   {
