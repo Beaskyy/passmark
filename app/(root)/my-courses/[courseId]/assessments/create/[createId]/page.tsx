@@ -186,16 +186,17 @@ const AddQuestion = () => {
                     <FileUpload
                       onFileSelect={handleFileSelect}
                       accept={{
-                        "application/pdf": [".pdf"],
-                        "image/png": [".png"],
-                        "image/jpeg": [".jpg", ".jpeg"],
                         "application/msword": [".doc"],
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                           [".docx"],
+                        "application/vnd.google-apps.document": [".gdoc"],
+                        "application/vnd.oasis.opendocument.text": [".odt"],
+                        "text/plain": [".txt"],
+                        "application/rtf": [".rtf"],
                       }}
                       maxSize={20 * 1024 * 1024} // 20MB
                       uploadText="Choose a file or drag & drop it here"
-                      subText="PDF, PNG, JPEG and DOC formats, up to 20 MB"
+                      subText="DOC, DOCX, GDOC, ODT, TXT and RTF formats, up to 20 MB"
                       icon="/images/upload.svg"
                     />
                   )}
