@@ -13,13 +13,6 @@ import { useUpdateStudent } from "@/hooks/useUpdateStudent";
 import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import EditStudentsSkeleton from "@/components/skeletons/EditStudentsSkeleton";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -217,6 +210,8 @@ const NewStudent = () => {
   };
 
   const handleSubmit = async () => {
+    router.push(`/my-courses/${courseId}`);
+    return;
     // Check if the last student form has data but hasn't been saved
     const lastStudent = students[students.length - 1];
     const hasUnsavedData =
@@ -238,7 +233,7 @@ const NewStudent = () => {
         });
         toast.success("Student added successfully");
         router.push(`/my-courses/${courseId}`);
-      } catch (error) {
+      } catch (error: any) {
         toast.error(
           error instanceof Error ? error.message : "Failed to add student"
         );

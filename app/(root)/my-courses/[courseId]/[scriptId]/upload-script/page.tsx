@@ -65,9 +65,6 @@ const UploadScript = () => {
       "application/pdf": [".pdf"],
       "image/png": [".png"],
       "image/jpeg": [".jpg", ".jpeg"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
     },
     maxSize: 50 * 1024 * 1024, // 50MB
   });
@@ -232,7 +229,7 @@ const UploadScript = () => {
                           Choose a file or drag & drop it here
                         </p>
                         <p className="lg:text-sm text-xs text-[#838282] lg:font-normal font-light">
-                          JPEG, PNG, PDF, and DOC formats, up to 50 MB
+                          PDF, JPEG, and PNG formats, up to 50 MB
                         </p>
                       </div>
                       <Button className="bg-transparent border border-[#EBEBEB] text-[#5C5C5C] lg:text-sm text-xs max-h-9 py-2 px-[18px] shadow-sm font-medium hover:text-white">
