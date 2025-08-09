@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useExtractQuestions } from "@/hooks/useExtractQuestions";
 import { useUploadFile } from "@/hooks/useUploadFile";
 import { toast } from "sonner";
@@ -25,6 +25,17 @@ const AddQuestion = () => {
   const params = useParams();
   const courseId = params.courseId as string;
   const createId = params.createId as string;
+  const [createdAssessmentId, setCreatedAssessmentId] = useState<string | null>(
+    null
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!courseId || !createId) return;
+    const key = `createdAssessmentId-${courseId}-${createId}`;
+    const id = sessionStorage.getItem(key);
+    if (id) setCreatedAssessmentId(id);
+  }, [courseId, createId]);
+
   const router = useRouter();
   const [showAddBulk, setShowAddBulk] = useState(false);
   const [fileObj, setFileObj] = useState<FileObj | null>(null);
@@ -68,8 +79,8 @@ const AddQuestion = () => {
 
   const handleContinue = () => {
     if (!fileObj || fileObj.status !== "completed") return;
-    if (!createId) {
-      toast.error("Missing assessment ID");
+    if (!createdAssessmentId) {
+      toast.error("Assessment was not created. Please go back and try again.");
       return;
     }
 
@@ -79,14 +90,14 @@ const AddQuestion = () => {
         // Then extract questions using the uploaded file URL
         extractQuestions(
           {
-            assessment_id: createId,
+            assessment_id: createdAssessmentId,
             doc_url: uploadResponse.script_url,
           },
           {
             onSuccess: () => {
               toast.success("Questions extracted successfully");
               router.push(
-                `/my-courses/${courseId}/assessments/create/${createId}/create-assessment`
+                `/my-courses/${courseId}/assessments/create/${createId}/create-assessment/${createdAssessmentId}`
               );
             },
             onError: (err: any) => {
@@ -253,8 +264,18 @@ const AddQuestion = () => {
                     />
                   </div>
                   <Link
-                    href={`/my-courses/${courseId}/assessments/create/${createId}/create-assessment`}
+                    href={`/my-courses/${courseId}/assessments/create/${createId}/create-assessment/${
+                      createdAssessmentId ?? ""
+                    }`}
                     className="relative py-[22px] px-[18px] rounded-[14px] h-[85px] shadow-sm bg-white overflow-hidden cursor-pointer"
+                    onClick={(e) => {
+                      if (!createdAssessmentId) {
+                        e.preventDefault();
+                        toast.error(
+                          "Assessment was not created. Please go back and try again."
+                        );
+                      }
+                    }}
                   >
                     <div className="flex flex-col gap-1">
                       <h4 className="lg:text-[15px] text-sm text-[#474545] lg:font-semibold font-medium">
