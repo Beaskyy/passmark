@@ -1,9 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 export type CreditEstimatePayload = {
   pages: number;
   questions: number;
   script_count: number;
+};
+
+export type CreditEstimateRequest = {
+  token: string;
+  payload: CreditEstimatePayload;
 };
 
 export type CreditEstimateBreakdown = {
@@ -24,14 +30,16 @@ export type CreditEstimateResponse = {
 };
 
 const estimateCredits = async (
-  payload: CreditEstimatePayload
+  request: CreditEstimateRequest
 ): Promise<CreditEstimateResponse> => {
+  const { token, payload } = request;
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/credit/estimate-credits/`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(payload),
     }
@@ -43,7 +51,13 @@ const estimateCredits = async (
 };
 
 export const useEstimateCredits = () => {
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
   return useMutation({
-    mutationFn: estimateCredits,
+    mutationFn: (payload: CreditEstimatePayload) => {
+      if (!token) throw new Error("No access token");
+      return estimateCredits({ token, payload });
+    },
   });
 };
