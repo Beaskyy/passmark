@@ -17,6 +17,18 @@ const uploadToCloudinary = async (file: File): Promise<UploadFileResponse> => {
     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
   );
 
+  // Keep original format by using the original filename extension in public_id
+  const fileExtension = file.name.split(".").pop();
+  if (fileExtension) {
+    formData.append(
+      "public_id",
+      `documents/${Date.now()}_${file.name.replace(
+        `.${fileExtension}`,
+        ""
+      )}.${fileExtension}`
+    );
+  }
+
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
     {
