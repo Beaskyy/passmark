@@ -9,6 +9,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useExtractQuestions } from "@/hooks/useExtractQuestions";
 import { useUploadFile } from "@/hooks/useUploadFile";
+import { useEstimateCredits } from "@/hooks/useEstimateCredits";
+import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Trash2 } from "lucide-react";
@@ -42,6 +44,9 @@ const AddQuestion = () => {
   const { mutate: extractQuestions, isPending: isExtracting } =
     useExtractQuestions();
   const { mutate: uploadFile, isPending: isUploading } = useUploadFile();
+  const { mutate: estimateCredits, isPending: isEstimating } =
+    useEstimateCredits();
+  const { data: creditBalance } = useFetchOrganisationCreditBalance();
 
   const handleFileSelect = (selectedFile: File) => {
     setFileObj({
@@ -87,24 +92,60 @@ const AddQuestion = () => {
     // First upload the file to Cloudinary
     uploadFile(fileObj.file, {
       onSuccess: (uploadResponse) => {
-        // Then extract questions using the uploaded file URL
-        extractQuestions(
+        // Estimate page count based on file size (rough estimate: 0.5MB per page)
+        const estimatedPages = Math.ceil(
+          fileObj.file.size / (1024 * 1024 * 0.5)
+        );
+        const estimatedQuestions = Math.ceil(estimatedPages * 1.5); // Rough estimate: 1.5 questions per page
+
+        estimateCredits(
           {
-            assessment_id: createdAssessmentId,
-            doc_url: uploadResponse.script_url,
+            pages: estimatedPages,
+            questions: estimatedQuestions,
+            script_count: 1,
           },
           {
-            onSuccess: () => {
-              toast.success("Questions extracted successfully");
-              router.push(
-                `/my-courses/${courseId}/assessments/create/${createId}/create-assessment/${createdAssessmentId}`
+            onSuccess: (estimateResponse) => {
+              const estimatedCredits = estimateResponse.data.estimated_credits;
+              const currentBalance = Number(
+                creditBalance?.current_balance || 0
+              );
+
+              if (currentBalance < estimatedCredits) {
+                toast.error(
+                  `Insufficient credits. You need ${estimatedCredits.toFixed(
+                    2
+                  )} credits but have ${currentBalance.toFixed(2)} credits.`
+                );
+                return;
+              }
+
+              // Credits are sufficient, proceed with question extraction
+              extractQuestions(
+                {
+                  assessment_id: createdAssessmentId,
+                  doc_url: uploadResponse.script_url,
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Questions extracted successfully");
+                    router.push(
+                      `/my-courses/${courseId}/assessments/create/${createId}/create-assessment/${createdAssessmentId}`
+                    );
+                  },
+                  onError: (err: any) => {
+                    toast.error(err.message || "Failed to extract questions");
+                    setFileObj((prev) =>
+                      prev
+                        ? { ...prev, status: "error", error: err.message }
+                        : null
+                    );
+                  },
+                }
               );
             },
             onError: (err: any) => {
-              toast.error(err.message || "Failed to extract questions");
-              setFileObj((prev) =>
-                prev ? { ...prev, status: "error", error: err.message } : null
-              );
+              toast.error(err.message || "Failed to estimate credits");
             },
           }
         );
@@ -219,10 +260,13 @@ const AddQuestion = () => {
                     !fileObj ||
                     fileObj.status !== "completed" ||
                     isUploading ||
-                    isExtracting
+                    isExtracting ||
+                    isEstimating
                   }
                 >
-                  {isUploading
+                  {isEstimating
+                    ? "Estimating Credits..."
+                    : isUploading
                     ? "Uploading..."
                     : isExtracting
                     ? "Extracting Questions..."
