@@ -11,6 +11,7 @@ export type CreateScriptPayload = {
     script_type: string;
     script_size: string;
   }>;
+  page_skip: number;
 };
 
 const createScript = async (token: string, payload: CreateScriptPayload) => {
