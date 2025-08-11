@@ -8,6 +8,13 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useCreateScript } from "@/hooks/useCreateScript";
+import { useEstimateCredits } from "@/hooks/useEstimateCredits";
+import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
+import { useFetchQuestions } from "@/hooks/useFetchQuestions";
+import { useFetchStudentList } from "@/hooks/useFetchStudentList";
+import { useSession } from "next-auth/react";
+import { useAccount } from "@/providers/AccountProvider";
+import { toast } from "sonner";
 
 interface FileWithProgress {
   id: string;
@@ -28,6 +35,15 @@ const UploadScript = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const { mutate: createScript, isPending: isCreating } = useCreateScript();
   const [retryingFileId, setRetryingFileId] = useState<string | null>(null);
+  const { mutateAsync: estimateCredits, isPending: isEstimating } =
+    useEstimateCredits();
+  const { data: creditBalance } = useFetchOrganisationCreditBalance();
+  const { data: questionsResponse } = useFetchQuestions(scriptId);
+  const { data: session } = useSession();
+  const { user } = useAccount();
+  const { data: studentsList } = useFetchStudentList(
+    user?.organisation?.org_id || ""
+  );
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -73,13 +89,62 @@ const UploadScript = () => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
+  // Estimate totals for credit estimation
+  const estimateTotals = () => {
+    const pages = files.reduce((sum, f) => {
+      if (f.file.type.includes("image")) return sum + 1;
+      const estimatedPages = Math.max(
+        1,
+        Math.ceil(f.file.size / (1024 * 1024 * 0.5))
+      );
+      return sum + estimatedPages;
+    }, 0);
+    const questionList = ((questionsResponse as any)?.data as any[]) || [];
+    const questions =
+      questionList.length > 0 ? questionList.length : Math.ceil(pages * 1.5);
+    const script_count = files.length;
+    return { pages, questions, script_count };
+  };
+
   const handleMarkScript = async () => {
-    setIsMarking(true);
     setUploadError(null);
-    setMarkingProgress(0);
     try {
-      // Upload all files to Cloudinary
-      const uploaded = [];
+      // Step 1: Validate file names match student IDs
+      const students = studentsList || [];
+      const studentIds = students.map((s) => s.student_number);
+
+      for (const fileObj of files) {
+        const fileNameWithoutExt = fileObj.file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+        if (!studentIds.includes(fileNameWithoutExt)) {
+          toast.error(
+            `File "${fileObj.file.name}" does not match any student ID. Please ensure file names match student numbers.`
+          );
+          return;
+        }
+      }
+
+      // Step 2: Estimate credits
+      const { pages, questions, script_count } = estimateTotals();
+      const estimate = await estimateCredits({
+        pages,
+        questions,
+        script_count,
+      });
+      const estimatedCredits = estimate.data.estimated_credits;
+      const currentBalance = Number(creditBalance?.current_balance || 0);
+      if (currentBalance < estimatedCredits) {
+        toast.error(
+          `Insufficient credits. You need ${estimatedCredits.toFixed(
+            2
+          )} credits but have ${currentBalance.toFixed(2)} credits.`
+        );
+        return;
+      }
+
+      // Step 3: Proceed with upload and marking
+      setIsMarking(true);
+      setMarkingProgress(0);
+      const uploaded: any[] = [];
       for (let i = 0; i < files.length; i++) {
         setMarkingProgress(Math.round((i / files.length) * 100));
         const fileObj = files[i];
@@ -100,7 +165,6 @@ const UploadScript = () => {
         }
       }
       setMarkingProgress(100);
-      // Call useCreateScript
       createScript(
         {
           assessment_id: scriptId,
@@ -348,11 +412,15 @@ const UploadScript = () => {
                   <Button
                     className="w-[174px] md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 disabled:bg-[#F6F6F6] disabled:bg-none disabled:text-[#9A9A9A]"
                     disabled={
-                      !hasFiles || isUploading || isMarking || isCreating
+                      !hasFiles ||
+                      isUploading ||
+                      isMarking ||
+                      isCreating ||
+                      isEstimating
                     }
                     onClick={handleMarkScript}
                   >
-                    Mark Script
+                    {isEstimating ? "Estimating Credits..." : "Mark Script"}
                   </Button>
                   {uploadError && (
                     <div className="text-red-500 text-xs mt-2">
