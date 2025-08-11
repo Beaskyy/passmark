@@ -388,7 +388,21 @@ const EditAssessment = () => {
       questions[questions.length - 1],
       questions.length - 1
     );
-    setIsOpen(true);
+    // Validate sums: total mark equals sum of marking criteria marks for all questions
+    const hasMismatch = questions.some((q) => {
+      const total = parseFloat(q.totalMark || "0");
+      const sum = (q.criteria || []).reduce((acc, c) => {
+        const val = parseFloat((c.mark as string) || "0");
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
+      return total !== sum;
+    });
+
+    if (hasMismatch) {
+      setIsOpen(true);
+    } else {
+      router.push(`/my-courses/${courseId}`);
+    }
   };
 
   const updateQuestion = <K extends keyof FormattedQuestion>(
@@ -1101,15 +1115,21 @@ const EditAssessment = () => {
               Your answer may need review
             </h5>
             <p className="text-[#8C8C8C] lg:text-sm text-xs">
-              It looks like there may be an issue with your answers. Kindly
+              It looks like there may be an issue with your questions. Kindly
               double-check
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-[13px] text-xs tracking-[1.5%] !hover:bg-primary hover:bg-[#f5f7ffc6] rounded-[10px] lg:font-semibold font-medium !text-[13px]">
+            <Button
+              onClick={() => router.push(`/my-courses/${courseId}`)}
+              className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-[13px] text-xs tracking-[1.5%] !hover:bg-primary hover:bg-[#f5f7ffc6] rounded-[10px] lg:font-semibold font-medium !text-[13px]"
+            >
               Continue anyway
             </Button>
-            <Button className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 !text-[13px]">
+            <Button
+              onClick={() => setIsOpen(false)}
+              className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 !text-[13px]"
+            >
               Review answers
             </Button>
           </div>
