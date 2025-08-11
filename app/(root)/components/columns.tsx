@@ -53,7 +53,11 @@ const ActionsCell = ({ row, table }: any) => {
   const onApprove = table.options.meta?.onApprove;
   const status = row.original?.status?.toLowerCase();
   const actions =
-    status === "pending" ? ["View Script", "Approve"] : ["View Script"];
+    status === "pending"
+      ? ["Approve"]
+      : status === "completed"
+      ? ["View Script"]
+      : [];
   return (
     <div className="flex gap-2">
       {actions.map((action: string, index: number) => {
@@ -262,7 +266,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white w-fit h-6 p-1 pr-2 rounded-md whitespace-nowrap capitalize">
+      <div className="flex items-center gap-1 border border-[#EBEBEB] bg-white min-w-[98px] w-full h-6 p-1 pr-2 rounded-md whitespace-nowrap capitalize">
         <Image
           src={`/images/${
             row.original?.status?.toLocaleLowerCase() === "completed"

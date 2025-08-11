@@ -485,7 +485,22 @@ const CreateAssessment = () => {
       questions[questions.length - 1],
       questions.length - 1
     );
-    setIsOpen(true);
+    // Validate sums and zero totals
+    const hasMismatch = questions.some((q) => {
+      const total = Number(q.totalMark || 0);
+      const sum = (q.criteria || []).reduce((acc, c) => {
+        const val = Number(c.mark || 0);
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
+      return total !== sum;
+    });
+    const hasZeroTotal = questions.some((q) => Number(q.totalMark || 0) === 0);
+
+    if (hasMismatch || hasZeroTotal) {
+      setIsOpen(true);
+    } else {
+      router.push(`/my-courses/${courseId}`);
+    }
   };
 
   const updateQuestion = <K extends keyof Question>(
@@ -1158,6 +1173,9 @@ const CreateAssessment = () => {
               </Button>
               <Button
                 className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+                disabled={
+                  createQuestion.isPending || updateQuestionApi.isPending
+                }
                 onClick={handleContinue}
               >
                 {questions.length > 1 ? "Finish" : "Continue"}

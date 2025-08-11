@@ -296,7 +296,7 @@ const ManageStudents = () => {
       </div>
       <Button
         className="md:mt-40 mt-20 md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
-        onClick={handleSubmit}
+        onClick={() => router.push(`/my-courses/${courseId}`)}
       >
         Save Changes
       </Button>
