@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -109,7 +110,11 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
   const descriptionInputRef = useRef<HTMLInputElement>(null);
 
   // 1) Fetch existing questions for this assessment (so already typed questions show up)
-  const { data: questionsResponse } = useFetchQuestions(params.assessmentId);
+  const {
+    data: questionsResponse,
+    isLoading: isQuestionsLoading,
+    isFetching: isQuestionsFetching,
+  } = useFetchQuestions(params.assessmentId);
 
   // Types for API mapping
   type APIMarkingGuide = {
@@ -189,6 +194,19 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
       enabled: !!token && !!orgId && !!qId,
     })),
   });
+
+  // Determine if any data is still loading
+  const areMarkingGuidesPending = markingGuideResults?.some(
+    (r) => r.isLoading || r.isFetching
+  );
+  const arePenaltiesPending = penaltyResults?.some(
+    (r) => r.isLoading || r.isFetching
+  );
+  const isDataLoading =
+    isQuestionsLoading ||
+    isQuestionsFetching ||
+    areMarkingGuidesPending ||
+    arePenaltiesPending;
 
   // 3) Initialize local state with fetched questions (run once when data ready)
   useEffect(() => {
@@ -627,8 +645,9 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
       }, 0);
       return totalMark !== criteriaSum;
     });
+    const hasZeroTotal = questions.some((q) => Number(q.totalMark || 0) === 0);
 
-    if (hasMismatch) {
+    if (hasMismatch || hasZeroTotal) {
       setIsOpen(true);
     } else {
       router.push(`/my-courses/${courseId}`);
@@ -929,6 +948,77 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
     }
     removeBonus(questionIndex, bonusIndex);
   };
+
+  if (isDataLoading) {
+    return (
+      <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
+        <div className="flex justify-between lg:items-center gap-4">
+          <div className="flex items-center gap-3 mt-2">
+            <Image
+              src="/images/back.svg"
+              alt="back"
+              width={44}
+              height={44}
+              onClick={() => router.back()}
+            />
+            <h3 className="text-black font-semibold lg:text-[17px] text-sm">
+              My Questions
+            </h3>
+          </div>
+          <Image
+            src="/images/spinner2.svg"
+            alt="spinner"
+            width={32}
+            height={32}
+          />
+        </div>
+        <div className="flex flex-col gap-11 mt-7">
+          <Skeleton className="h-9 w-2/3" />
+          <div className="flex gap-3.5 items-center">
+            <Skeleton className="h-6 w-12 rounded-full" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-5 rounded-full" />
+          </div>
+          <div className="flex flex-col gap-[56px]">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex flex-col gap-8">
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                  <Skeleton className="h-10" />
+                  <Skeleton className="h-10" />
+                </div>
+                <Skeleton className="h-10" />
+                <div className="flex flex-col gap-3.5">
+                  <Skeleton className="h-5 w-40" />
+                  <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                  </div>
+                  <Skeleton className="h-5 w-32" />
+                </div>
+                <div className="flex flex-col gap-[15px]">
+                  <div className="flex gap-2.5 items-center">
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                    <Skeleton className="h-10" />
+                  </div>
+                  <Skeleton className="h-5 w-36" />
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-10 w-40 rounded-[10px]" />
+              <Skeleton className="h-10 w-28 rounded-[10px]" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="lg:px-[108px] md:px-[20] p-5 bg-white min-h-screen">
@@ -1305,6 +1395,9 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
               </Button>
               <Button
                 className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+                disabled={
+                  createQuestion.isPending || updateQuestionApi.isPending
+                }
                 onClick={handleContinue}
               >
                 {questions.length > 1 ? "Finish" : "Continue"}

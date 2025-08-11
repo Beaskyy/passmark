@@ -397,8 +397,11 @@ const EditAssessment = () => {
       }, 0);
       return total !== sum;
     });
+    const hasZeroTotal = questions.some(
+      (q) => parseFloat(q.totalMark || "0") === 0
+    );
 
-    if (hasMismatch) {
+    if (hasMismatch || hasZeroTotal) {
       setIsOpen(true);
     } else {
       router.push(`/my-courses/${courseId}`);
@@ -1095,6 +1098,7 @@ const EditAssessment = () => {
             </Button>
             <Button
               className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10"
+              disabled={createQuestion.isPending || updateQuestionApi.isPending}
               onClick={handleContinue}
             >
               {questions.length > 1 ? "Finish" : "Continue"}
