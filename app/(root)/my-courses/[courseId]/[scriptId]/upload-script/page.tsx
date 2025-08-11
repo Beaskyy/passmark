@@ -167,6 +167,7 @@ const UploadScript = () => {
         {
           assessment_id: scriptId,
           scripts: uploaded,
+          page_skip: 0,
         },
         {
           onSuccess: () => {
