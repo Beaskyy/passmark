@@ -82,7 +82,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
           width={32}
           height={32}
         />
-
+       
         <div>
           <p className="font-medium">{row.original?.file_name}</p>
           <small className="text-xs text-[#5C5C5C]">
