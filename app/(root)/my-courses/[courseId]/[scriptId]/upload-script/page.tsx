@@ -11,7 +11,7 @@ import { useCreateScript } from "@/hooks/useCreateScript";
 import { useEstimateCredits } from "@/hooks/useEstimateCredits";
 import { useFetchOrganisationCreditBalance } from "@/hooks/useFetchOrganisationCreditBalance";
 import { useFetchQuestions } from "@/hooks/useFetchQuestions";
-import { useFetchStudentList } from "@/hooks/useFetchStudentList";
+import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import { useSession } from "next-auth/react";
 import { useAccount } from "@/providers/AccountProvider";
 import { toast } from "sonner";
@@ -41,9 +41,7 @@ const UploadScript = () => {
   const { data: questionsResponse } = useFetchQuestions(scriptId);
   const { data: session } = useSession();
   const { user } = useAccount();
-  const { data: studentsList } = useFetchStudentList(
-    user?.organisation?.org_id || ""
-  );
+  const { data: studentsList } = useFetchEnrolledStudents(courseId);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
