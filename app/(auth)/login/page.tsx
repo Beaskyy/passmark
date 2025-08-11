@@ -82,7 +82,7 @@ const Login = () => {
             <div className="flex flex-col gap-10">
               <div className="flex flex-col gap-1">
                 <h4 className="lg:text-xl text-base text-[#111827] font-semibold tracking-[-1%]">
-                  Welcome back
+                  Login
                 </h4>
                 <p className="lg:text-base text-xs text-[#8E8E8E]">
                   {`
