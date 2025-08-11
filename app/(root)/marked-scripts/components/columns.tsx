@@ -247,7 +247,11 @@ export const columns: ColumnDef<MarkedScript>[] = [
       const onApprove = table.options.meta?.onApprove;
       const status = row.original?.status?.toLowerCase();
       const actions =
-        status === "pending" ? ["View Script", "Approve"] : ["View Script"];
+        status === "pending"
+          ? ["Approve"]
+          : status === "completed"
+          ? ["View Script"]
+          : [];
       return (
         <div className="flex gap-2">
           {actions.map((action: string, index: number) => {

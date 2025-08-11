@@ -99,10 +99,10 @@ const Result = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const images = ["/images/result.svg", "/images/landscape.svg"];
 
-  return (
-    <div className="relative">
-      {/* Loading skeleton */}
-      {isLoadingData && (
+  // Early return: show only the loading skeleton while fetching
+  if (isLoadingData) {
+    return (
+      <div className="relative">
         <div className="lg:px-[108px] md:px-[20] p-5 overflow-y-auto pb-40">
           <div className="flex justify-between lg:items-center gap-4 mt-2">
             <div className="w-11 h-11 bg-gray-200 rounded animate-pulse" />
@@ -146,12 +146,21 @@ const Result = () => {
             </div>
           </div>
         </div>
-      )}
-      {(error || markedScriptsError || markedScriptError) && (
-        <div className="text-center text-red-500 mt-8">
-          Error loading script data
-        </div>
-      )}
+      </div>
+    );
+  }
+
+  // Early return: show error state
+  if (error || markedScriptsError || markedScriptError) {
+    return (
+      <div className="text-center text-red-500 mt-8">
+        Error loading script data
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
       <main className="lg:px-[108px] md:px-[20] p-5 overflow-y-auto pb-40">
         <div className="flex justify-between lg:items-center gap-4 mt-2">
           <Image
