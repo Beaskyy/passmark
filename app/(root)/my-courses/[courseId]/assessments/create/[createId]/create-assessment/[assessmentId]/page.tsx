@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useRef } from "react";
+import { use, useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,10 @@ import { useDeletePenalty } from "@/hooks/useDeletePenalty";
 import { useCreateBonus } from "@/hooks/useCreateBonus";
 import { useUpdateBonus } from "@/hooks/useUpdateBonus";
 import { useDeleteBonus } from "@/hooks/useDeleteBonus";
+import { useFetchQuestions } from "@/hooks/useFetchQuestions";
+import { useSession } from "next-auth/react";
+import { useAccount } from "@/providers/AccountProvider";
+import { useQueries } from "@tanstack/react-query";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -103,6 +107,150 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
   const [debouncedDescription, setDebouncedDescription] = useState("");
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const descriptionInputRef = useRef<HTMLInputElement>(null);
+
+  // 1) Fetch existing questions for this assessment (so already typed questions show up)
+  const { data: questionsResponse } = useFetchQuestions(params.assessmentId);
+
+  // Types for API mapping
+  type APIMarkingGuide = {
+    guide_id: string;
+    criteria: string;
+    description: string;
+    mark: number;
+  };
+  type APIPenalty = {
+    penalty_id: string;
+    description: string;
+    mark: number;
+  };
+  type APIBonus = {
+    bonus_id: string;
+    description: string;
+    mark: number;
+  };
+  type APIQuestion = {
+    question_id: string;
+    number: string;
+    text: string;
+    total_marks: number;
+    bonuses?: APIBonus[];
+  };
+
+  // 2) For each question, fetch marking guides and penalties (same pattern as edit page)
+  const { data: session } = useSession();
+  const { user } = useAccount();
+  const token = session?.accessToken;
+  const orgId = user?.organisation?.org_id;
+
+  const apiQuestionList: APIQuestion[] = useMemo(
+    () => (questionsResponse?.data as APIQuestion[] | undefined) || [],
+    [questionsResponse?.data]
+  );
+  const questionIds = apiQuestionList.map((q) => q.question_id);
+
+  const markingGuideResults = useQueries({
+    queries: questionIds.map((qId: string) => ({
+      queryKey: ["markingGuideList", qId],
+      queryFn: async () => {
+        if (!token || !orgId) return { data: [] } as any;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/main/marking-guide/list/${qId}/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        return response.json();
+      },
+      enabled: !!token && !!orgId && !!qId,
+    })),
+  });
+
+  const penaltyResults = useQueries({
+    queries: questionIds.map((qId: string) => ({
+      queryKey: ["penaltyList", qId],
+      queryFn: async () => {
+        if (!token || !orgId) return { data: [] } as any;
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/main/penalty/list/${qId}/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        return response.json();
+      },
+      enabled: !!token && !!orgId && !!qId,
+    })),
+  });
+
+  // 3) Initialize local state with fetched questions (run once when data ready)
+  useEffect(() => {
+    const allMarkingGuidesLoaded = markingGuideResults?.every(
+      (r) => r.isSuccess
+    );
+    const allPenaltiesLoaded = penaltyResults?.every((r) => r.isSuccess);
+
+    const hasAnyCreated = questions.some((q) => q.isCreated);
+
+    if (
+      !hasAnyCreated &&
+      apiQuestionList.length > 0 &&
+      allMarkingGuidesLoaded &&
+      allPenaltiesLoaded
+    ) {
+      const formatted = apiQuestionList.map((q, idx) => {
+        const guides = (markingGuideResults[idx]?.data?.data ||
+          []) as APIMarkingGuide[];
+        const penalties = (penaltyResults[idx]?.data?.data ||
+          []) as APIPenalty[];
+
+        const mappedGuides = guides.map((g) => ({
+          criterion: g.criteria || "",
+          mark: (g.mark ?? 0).toString(),
+          description: g.description || "",
+          guide_id: g.guide_id,
+        }));
+        const mappedPenalties = penalties.map((p) => ({
+          description: p.description || "",
+          mark: (p.mark ?? 0).toString(),
+          penalty_id: p.penalty_id,
+        })) || [{ description: "" }];
+        const mappedBonuses = q.bonuses?.map((b) => ({
+          description: b.description || "",
+          mark: (b.mark ?? 0).toString(),
+          bonus_id: b.bonus_id,
+        })) || [{ description: "" }];
+
+        return {
+          questionNumber: q.number || "",
+          totalMark: (q.total_marks ?? 0).toString(),
+          question: q.text || "",
+          answer: "",
+          criteria:
+            mappedGuides.length > 0
+              ? mappedGuides
+              : [{ criterion: "", mark: "", description: "" }],
+          penalties:
+            mappedPenalties.length > 0
+              ? mappedPenalties
+              : [{ description: "" }],
+          bonuses: mappedBonuses,
+          showPenalties: mappedPenalties.length > 0,
+          showBonuses: false,
+          question_id: q.question_id,
+          isCreated: true,
+        } as Question;
+      });
+      setQuestions(formatted);
+    }
+  }, [apiQuestionList, markingGuideResults, penaltyResults, questions]);
 
   // Load from sessionStorage when courseId and title are available
   useEffect(() => {
@@ -268,10 +416,12 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
   }, [questions, assessmentId, useAI]);
 
   // --- 2. Debounce for Criteria (Marking Guide) ---
+  // Debounced effect only UPDATES existing guides. Creation happens onBlur.
   useEffect(() => {
     questions.forEach((question, questionIndex) => {
-      question.criteria.forEach((criterion, criterionIndex) => {
+      question.criteria.forEach((criterion) => {
         if (
+          criterion.guide_id &&
           criterion.criterion.trim() &&
           criterion.mark.trim() &&
           criterion.description.trim()
@@ -283,34 +433,17 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
             clearTimeout(criterion.debounceTimeout);
           criterion.debounceTimeout = setTimeout(async () => {
             if (!question.question_id) return;
-            if (!criterion.guide_id) {
-              try {
-                const payload = {
-                  question_id: question.question_id as string,
-                  criteria: criterion.criterion,
-                  description: criterion.description,
-                  mark: Number(criterion.mark),
-                  by_ai: useAI,
-                };
-                const response = await createMarkingGuide.mutateAsync(payload);
-                const newQuestions = [...questions];
-                newQuestions[questionIndex].criteria[criterionIndex].guide_id =
-                  response.data?.guide_id || response.guide_id;
-                setQuestions(newQuestions);
-              } catch {}
-            } else {
-              try {
-                const payload = {
-                  guide_id: criterion.guide_id,
-                  question_id: question.question_id as string,
-                  criteria: criterion.criterion,
-                  description: criterion.description,
-                  mark: Number(criterion.mark),
-                  by_ai: useAI,
-                };
-                await updateMarkingGuide.mutateAsync(payload);
-              } catch {}
-            }
+            try {
+              const payload = {
+                guide_id: criterion.guide_id as string,
+                question_id: question.question_id as string,
+                criteria: criterion.criterion,
+                description: criterion.description,
+                mark: Number(criterion.mark),
+                by_ai: useAI,
+              };
+              await updateMarkingGuide.mutateAsync(payload);
+            } catch {}
           }, 500);
         }
       });
@@ -485,7 +618,21 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
       questions[questions.length - 1],
       questions.length - 1
     );
-    setIsOpen(true);
+    // Validate: sum of criteria marks equals question total mark for all questions
+    const hasMismatch = questions.some((q) => {
+      const totalMark = Number(q.totalMark || 0);
+      const criteriaSum = (q.criteria || []).reduce((sum, c) => {
+        const val = Number(c.mark || 0);
+        return sum + (isNaN(val) ? 0 : val);
+      }, 0);
+      return totalMark !== criteriaSum;
+    });
+
+    if (hasMismatch) {
+      setIsOpen(true);
+    } else {
+      router.push(`/my-courses/${courseId}`);
+    }
   };
 
   const updateQuestion = <K extends keyof Question>(
@@ -1179,15 +1326,21 @@ const CreateAssessment = ({ params }: { params: { assessmentId: string } }) => {
               Your answer may need review
             </h5>
             <p className="text-[#8C8C8C] lg:text-sm text-xs">
-              It looks like there may be an issue with your answers. Kindly
+              It looks like there may be an issue with your questions. Kindly
               double-check
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-[13px] text-xs tracking-[1.5%] !hover:bg-primary hover:bg-[#f5f7ffc6] rounded-[10px] lg:font-semibold font-medium !text-[13px]">
+            <Button
+              onClick={() => router.push(`/my-courses/${courseId}`)}
+              className="lg:h-10 h-8 w-fit bg-[#F5F7FF] border border-[#F0F3FF] text-[#335CFF] lg:text-[13px] text-xs tracking-[1.5%] !hover:bg-primary hover:bg-[#f5f7ffc6] rounded-[10px] lg:font-semibold font-medium !text-[13px]"
+            >
               Continue anyway
             </Button>
-            <Button className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 !text-[13px]">
+            <Button
+              onClick={() => setIsOpen(false)}
+              className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF] max-h-10 !text-[13px]"
+            >
               Review answers
             </Button>
           </div>

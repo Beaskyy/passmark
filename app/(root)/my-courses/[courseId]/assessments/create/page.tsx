@@ -59,6 +59,11 @@ const CreateAssessment = () => {
             `createdAssessmentId-${courseId}-${slug}`,
             createdId
           );
+          // Store title so the next page can prefill the input
+          sessionStorage.setItem(
+            `create-assessment-${courseId}-${slug}`,
+            JSON.stringify({ description: title, assessmentId: createdId })
+          );
         }
         router.push(href);
       } catch (err) {
