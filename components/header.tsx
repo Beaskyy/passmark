@@ -28,6 +28,7 @@ export const Header = () => {
   const { user, isLoading } = useAccount();
   const [showUnits, setShowUnits] = useState(false);
   const [showUnitPopover, setShowUnitPopover] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { data: creditBalance, isLoading: isCreditLoading } =
     useFetchOrganisationCreditBalance();
 
@@ -75,13 +76,80 @@ export const Header = () => {
           </div>
         </div>
         <div className="flex items-center lg:gap-4 gap-1">
-          <Image
-            src="/images/notification.svg"
-            alt="notification"
-            width={40}
-            height={40}
-            className="hidden lg:flex"
-          />
+          <Popover open={showNotifications} onOpenChange={setShowNotifications}>
+            <PopoverTrigger className="hidden lg:flex cursor-pointer hover:opacity-80 transition-opacity">
+              <Image
+                src="/images/notification.svg"
+                alt="notification"
+                width={40}
+                height={40}
+              />
+            </PopoverTrigger>
+            {showNotifications && (
+              <div
+                className="fixed inset-0 bg-black/20 z-40"
+                onClick={() => setShowNotifications(false)}
+              />
+            )}
+            <PopoverContent
+              className="w-full max-w-[402px] p-0 border-0 bg-white rounded-2xl z-50"
+              style={{
+                boxShadow: `
+                  0px 48px 48px -24px #3333330A,
+                  0px 24px 24px -12px #3333330A,
+                  0px 12px 12px -6px #3333330A,
+                  0px 6px 6px -3px #3333330A,
+                  0px 3px 3px -1.5px #33333305,
+                  0px 1px 1px 0.5px #3333330A,
+                  0px 0px 0px 1px #3333330A,
+                  0px -1px 1px -0.5px #3333330F inset
+                `,
+              }}
+            >
+              <div className="py-4 px-5 border-b border-[#EBEBEB]">
+                <div className="flex justify-between items-center">
+                  <h3 className="lg:text-base text-sm font-semibold text-[#171717]">
+                    Notifications
+                  </h3>
+                  <button className="text-[#335CFF] lg:text-sm text-xs lg:font-medium font-normal hover:underline">
+                    Mark all as read
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-2 space-y-1">
+                {/* Notification 1 */}
+                <div className="flex items-start gap-1 p-3">
+                  <div className="flex-1">
+                    <p className="lg:text-sm text-xs text-[#3C3C3C] font-medium">
+                      🎉Your script has been marked and is ready to view.
+                    </p>
+                    <p className="text-xs text-[#5C5C5C] mt-1">8 min ago</p>
+                  </div>
+                </div>
+
+                {/* Notification 2 */}
+                <div className="flex items-start gap-1 p-3">
+                  <div className="flex-1">
+                    <p className="lg:text-sm text-xs text-[#3C3C3C] font-medium">
+                      📄 You have 20 scripts waiting in line. We’re on it!
+                    </p>
+                    <p className="text-xs text-[#5C5C5C] mt-1">2 hours ago</p>
+                  </div>
+                </div>
+
+                {/* Notification 3 */}
+                <div className="flex items-start gap-1 p-3">
+                  <div className="flex-1">
+                    <p className="lg:text-sm text-xs text-[#3C3C3C] font-medium">
+                      🎉You have successfully purchased 50,000 Units
+                    </p>
+                    <p className="text-xs text-[#5C5C5C] mt-1">3 hours ago</p>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Popover open={showUnitPopover} onOpenChange={setShowUnitPopover}>
             <PopoverTrigger className="flex justify-center items-center gap-1.5 md:h-10 h-8 pl-[9px] pr-3 py-1.5 border border-[#F6F6F6] rounded-[22px] bg-[#FBFBFB]">
               <div className="flex justify-center items-center gap-2">
@@ -95,7 +163,14 @@ export const Header = () => {
                   {isCreditLoading ? (
                     <Skeleton className="w-24 h-5" />
                   ) : (
-                    <p className="text-[13px] text-[#FA8400] font-bold tracking-[0.8px] uppercase">
+                    <p
+                      className={`text-[13px] font-bold tracking-[0.8px] uppercase ${
+                        creditBalance?.current_balance &&
+                        +creditBalance.current_balance < 0
+                          ? "text-[#FB3748]"
+                          : "text-[#006730]"
+                      }`}
+                    >
                       {creditBalance?.current_balance
                         ? `${Number(
                             creditBalance.current_balance
@@ -109,7 +184,14 @@ export const Header = () => {
             <PopoverContent className="w-[266px] py-3.5 flex flex-col justify-center items-center gap-3">
               <div className="flex flex-col items-center justify-center gap-1.5">
                 <p className="text-xs text-[#A2A2A2]">My Unit Balance</p>
-                <h6 className="lg:text-[15px] text-sm text-[#FA8400] font-bold">
+                <h6
+                  className={`lg:text-[15px] text-sm font-bold ${
+                    creditBalance?.current_balance &&
+                    +creditBalance.current_balance < 0
+                      ? "text-[#FB3748]"
+                      : "text-[#006730]"
+                  }`}
+                >
                   {isCreditLoading ? (
                     <Skeleton className="w-24 h-5" />
                   ) : creditBalance?.current_balance ? (
