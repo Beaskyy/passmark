@@ -9,6 +9,7 @@ interface EmptyStateProps {
   link: string;
   buttonText: string;
   showIcon?: boolean;
+  showButton?: boolean;
   onClick?: () => void;
 }
 
@@ -19,6 +20,7 @@ const EmptyState = ({
   link,
   buttonText,
   showIcon,
+  showButton = true,
   onClick,
 }: EmptyStateProps) => {
   const buttonContent = (
@@ -41,21 +43,22 @@ const EmptyState = ({
           </p>
         </div>
       </div>
-      {onClick ? (
-        <button
-          onClick={onClick}
-          className="mt-12 flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
-        >
-          {buttonContent}
-        </button>
-      ) : (
-        <Link
-          href={link}
-          className="mt-12 flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
-        >
-          {buttonContent}
-        </Link>
-      )}
+      {showButton &&
+        (onClick ? (
+          <button
+            onClick={onClick}
+            className="mt-12 flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
+          >
+            {buttonContent}
+          </button>
+        ) : (
+          <Link
+            href={link}
+            className="mt-12 flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs font-medium"
+          >
+            {buttonContent}
+          </Link>
+        ))}
     </div>
   );
 };

@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useFetchAssessmentList } from "@/hooks/useFetchAssessmentList";
 import { DataTable } from "@/components/data-table";
@@ -58,6 +59,7 @@ import {
 import { useFetchEnrolledStudents } from "@/hooks/useFetchEnrolledStudents";
 import { useDeleteEnrollment } from "@/hooks/useDeleteEnrollment";
 import { generateSessionOptions } from "@/lib/utils";
+import { EllipsisVertical } from "lucide-react";
 
 // Add Student type
 interface Student {
@@ -195,6 +197,9 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
       dateAdded: s.created_at, // use created_at for date added
     })) ?? [];
 
+  // Safe count for enrolled students to avoid undefined access
+  const studentsCount = enrolledStudents?.length ?? 0;
+
   // Setup form with default values from courseDetails
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -245,17 +250,17 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
       <div className="flex lg:flex-row flex-col justify-between lg:items-center gap-7">
         <div className="flex gap-[27px]">
-          <Link href="/my-courses">
+          <div onClick={() => router.back()}>
             <Image src="/images/back.svg" alt="back" width={44} height={44} />
-          </Link>
-          <div className="flex flex-col gap-1">
+          </div>
+          {/* <div className="flex flex-col gap-1">
             <h4 className="text-black lg:text-[17px] text-sm lg:font-semibold font-medium uppercase">
               {code}
             </h4>
             <p className="text-[#939393] lg:text-base text-sm">{description}</p>
-          </div>
+          </div> */}
         </div>
-        <div className="flex items-center gap-[14px]">
+        {/* <div className="flex items-center gap-[14px]">
           <Link
             href={`/my-courses/${courseId}/assessments/create`}
             className="flex items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
@@ -301,9 +306,9 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </div> */}
       </div>
-      <>
+      {/* <>
         {showEdit ? (
           <div className="flex flex-col gap-4 mt-10">
             <h4 className="text-black lg:text-[17px] text-sm lg:font-semibold font-medium">
@@ -484,7 +489,7 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
             )}
           </>
         )}
-      </>
+      </> */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent
           className="max-w-[357px] px-5 py-4 text-center"
@@ -600,6 +605,243 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <div className="flex flex-col gap-6 mt-11">
+        <div className="grid lg:grid-cols-2 grid-cols-1 gap-[14px]">
+          <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm">
+            <div className="flex flex-col lg:gap-2">
+              <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
+                My Assessment
+              </p>
+              <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
+                {assessmentList?.length} Assessments
+              </h4>
+            </div>
+            <Link
+              href={`/my-courses/${courseId}/assessments/create`}
+              className="flex justify-center items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-[149px] cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
+                "
+            >
+              <span>New Assessment</span>
+            </Link>
+          </div>
+          <div className="flex justify-between items-center bg-[#F0F3FF] lg:p-[22px] p-3 rounded-[10px] hover:shadow-sm">
+            <div className="flex flex-col lg:gap-2">
+              <p className="lg:text-base text-[10px] text-[#939393] lg:font-medium font-normal">
+                My Student
+              </p>
+              <h4 className="text-black lg:text-base text-sm lg:font-[650] font-medium">
+                {studentsCount} Student{studentsCount !== 1 ? "s" : ""}
+              </h4>
+            </div>
+            <Link
+              href={`/my-courses/${courseId}/edit-students`}
+              className="flex justify-center items-center gap-1 whitespace-nowrap bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-[116px] cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-sm text-xs lg:font-semibold font-medium
+                "
+            >
+              <span>Add Student</span>
+            </Link>
+          </div>
+        </div>
+        <Tabs defaultValue="assessments" className="w-full">
+          <TabsList>
+            <TabsTrigger value="assessments">Assessments</TabsTrigger>
+            <TabsTrigger value="students">My Student</TabsTrigger>
+          </TabsList>
+          <TabsContent value="assessments">
+            <>
+              {showEdit ? (
+                <div className="flex flex-col gap-4 mt-1">
+                  <h4 className="text-black lg:text-[17px] text-sm lg:font-semibold font-medium">
+                    Edit Course Information
+                  </h4>
+                  <div className="flex flex-col gap-3.5 mt-6">
+                    <Form {...form}>
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-8"
+                      >
+                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3.5">
+                          <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Course name{" "}
+                                  <span className="text-[#335CFF]">*</span>
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="eg, Introduction to business education"
+                                    {...field}
+                                    className="shadow-sm border border-[#EBEBEB] text-sm placeholder:text-[#8A8A8A] max-h-10"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="code"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  Course title
+                                  <span className="text-[#335CFF]">*</span>
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="eg, BSE 101"
+                                    {...field}
+                                    className="shadow-sm border border-[#EBEBEB] text-sm placeholder:text-[#8A8A8A] max-h-10 uppercase"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="session"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Session</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="border border-[#EBEBEB] shadow-sm text-sm h-10 rounded-[10px] text-[#8A8A8A]">
+                                      <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {generateSessionOptions().map((session) => (
+                                      <SelectItem key={session} value={session}>
+                                        {session}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Course description{" "}
+                                <span className="text-[#5C5C5C] font-normal lg:text-sm text-xs">
+                                  (Optional)
+                                </span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="eg, This course is designed to introduce students to the basics of business education."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="md:pt-40 pt-20">
+                          <Button
+                            type="submit"
+                            className="md:text-[13px] text-xs rounded-[10px] py-2.5 px-6 bg-gradient-to-t from-[#0089FF] to-[#0068FF]"
+                            disabled={isEditPending}
+                          >
+                            {isEditPending ? "Saving..." : "Save Changes"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {isAssessmentLoading ? (
+                    <CourseDetailsSkeleton />
+                  ) : isAssessmentError ? (
+                    <div>Error - {assessmentError.message}</div>
+                  ) : (
+                    <div className="flex flex-col gap-[27px]">
+                      {assessmentList && assessmentList.length > 0 ? (
+                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-[18px] mt-1">
+                          {assessmentList.map(
+                            ({ assessment_id, title, description }) => {
+                              // Determine type from title or description
+                              let type = "other";
+                              if (/exam/i.test(title)) type = "examination";
+                              else if (/test/i.test(title)) type = "test";
+                              else if (/assign/i.test(title))
+                                type = "assignment";
+                              else if (/custom|other/i.test(title))
+                                type = "custom";
+                              const { yearColor, pillBg } =
+                                getAssessmentTypeColors(type);
+                              return (
+                                <div
+                                  key={assessment_id}
+                                  className="relative py-[22px] px-[18px] rounded-[14px] min-h-[57px] shadow-sm hover:shadow-md bg-white overflow-hidden cursor-pointer"
+                                  onClick={() =>
+                                    router.push(
+                                      `/my-courses/${courseId}/${assessment_id}`
+                                    )
+                                  }
+                                >
+                                  <div className="flex justify-between items-center gap-1">
+                                    <h4 className="lg:text-[15px] text-xs text-[#474545] lg:font-semibold font-medium">
+                                      {description}
+                                    </h4>
+                                    <div className="flex items-center gap-2.5">
+                                      <div
+                                        className="h-5 py-0.5 px-2 text-xs font-medium rounded-full w-fit"
+                                        style={{
+                                          backgroundColor: pillBg,
+                                          color: yearColor,
+                                        }}
+                                      >
+                                        {type.charAt(0).toUpperCase() +
+                                          type.slice(1)}
+                                      </div>
+                                      <div className="flex justify-center items-center border border-[#EAEAEA] w-6 h-6 rounded-full py-[3px] px-1">
+                                        <EllipsisVertical className="text-black" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      ) : (
+                        <EmptyState
+                          image="/images/empty-state.svg"
+                          title="No Assessment"
+                          desc="No assessments have been added."
+                          link={`/my-courses/${courseId}/assessments/create`}
+                          buttonText="Create Assessment"
+                          showIcon={false}
+                          showButton={false}
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          </TabsContent>
+          <TabsContent value="students">Students here</TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
