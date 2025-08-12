@@ -289,6 +289,17 @@ const AddQuestion = () => {
                       className="absolute right-0 bottom-0"
                     />
                   </Link>
+                  <div className="flex items-center p-2.5 rounded-xl bg-[#F5F7FF] gap-2">
+                    <Image
+                      src="/images/info.svg"
+                      alt="info"
+                      width={28}
+                      height={28}
+                    />
+                    <p className="lg:text-sm text-xs text-[#5F5F5F] font-medium max-w-[321px]">
+                    To save time and reduce stress, try uploading your questions instead!
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
