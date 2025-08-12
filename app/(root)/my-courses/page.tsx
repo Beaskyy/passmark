@@ -98,7 +98,7 @@ const MyCourses = () => {
                       <p className="lg:text-[13px] text-xs text-[#929292] font-medium uppercase">
                         {code}
                       </p>
-                      <div
+                     {session &&  <div
                         className="w-[81px] h-5 py-0.5 px-2 text-xs font-medium rounded-lg"
                         style={{
                           backgroundColor: color.pillBg,
@@ -106,7 +106,7 @@ const MyCourses = () => {
                         }}
                       >
                         {session}
-                      </div>
+                      </div>}
                     </div>
                   </div>
                   <ManualBackground
