@@ -54,8 +54,10 @@ const ActionsCell = ({ row, table }: any) => {
   const status = row.original?.status?.toLowerCase();
   const actions =
     status === "pending"
-      ? ["Approve"]
+      ? ["View Script", "Approve"]
       : status === "completed"
+      ? ["View Script"]
+      : status === "approved"
       ? ["View Script"]
       : [];
   return (
