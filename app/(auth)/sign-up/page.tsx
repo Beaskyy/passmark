@@ -354,7 +354,7 @@ const SignUp = () => {
                             width={24}
                             height={24}
                           />
-                          <span className="text-sm font-medium text-[#4B5563]">Sign in with Google</span>
+                          <span className="text-sm font-medium text-[#4B5563]">Sign up with Google</span>
                         </div>
                         {/* <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
                           <Image

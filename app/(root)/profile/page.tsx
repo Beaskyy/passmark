@@ -18,6 +18,7 @@ import Image from "next/image";
 import { useState } from "react";
 import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const Profile = () => {
   const { user, isLoading } = useAccount();
@@ -89,17 +90,17 @@ const Profile = () => {
           </h4>
           <div className="flex lg:flex-row flex-col justify-between lg:items-center py-4 px-[22px] bg-[#F0F3FF] rounded-[10px] gap-4">
             <div className="flex items-center gap-[18px]">
-            <Image
-                  src={
-                    session?.user?.image
-                      ? session?.user?.image
-                      : "/images/profile.svg"
-                  }
-                  alt="profile"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
+              <Image
+                src={
+                  session?.user?.image
+                    ? session?.user?.image
+                    : "/images/profile.svg"
+                }
+                alt="profile"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
               <div className="flex flex-col">
                 <h5 className="text-[#171717] lg:text-base text-sm font-semibold">
                   {user?.firstname} {user?.lastname}
@@ -295,24 +296,36 @@ const Profile = () => {
                   width={24}
                   height={24}
                 />
-                <Image
-                  src="/images/twitter.svg"
-                  alt="twitter"
-                  width={24}
-                  height={24}
-                />
+                <Link
+                  href="https://x.com/Passmark_AI"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/images/twitter.svg"
+                    alt="twitter"
+                    width={24}
+                    height={24}
+                  />
+                </Link>
                 <Image
                   src="/images/instagram.svg"
                   alt="instagram"
                   width={24}
                   height={24}
                 />
-                <Image
-                  src="/images/linkedin.svg"
-                  alt="linkedin"
-                  width={24}
-                  height={24}
-                />
+                <Link
+                  href="https://linkedin.com/company/passmark-ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/images/linkedin.svg"
+                    alt="linkedin"
+                    width={24}
+                    height={24}
+                  />
+                </Link>
                 <Image
                   src="/images/email.svg"
                   alt="email"
