@@ -166,9 +166,9 @@ const Login = () => {
                       </span>
                       <span className="flex-1 border-[0.5px] border-[#F3F4F6]"></span>
                     </div>
-                    <div className="grid grid-cols-3 lg:gap-3.5 gap-2">
+                    <div className="grid grid-cols-1 lg:gap-3.5 gap-2">
                       <div
-                        className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
+                        className="flex items-center justify-center gap-4 py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer"
                         onClick={() => signIn("google")}
                       >
                         <Image
@@ -177,8 +177,9 @@ const Login = () => {
                           width={24}
                           height={24}
                         />
+                        <span className="text-sm font-medium text-[#4B5563]">Login with Google</span>
                       </div>
-                      <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
+                      {/* <div className="flex items-center justify-center py-2.5 px-4 rounded-[22px] lg:h-11 h-8 border border-[#F2F2F2] cursor-pointer">
                         <Image
                           src="/images/apple.svg"
                           alt="apple"
@@ -196,7 +197,7 @@ const Login = () => {
                           width={24}
                           height={24}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </>
                 )}
