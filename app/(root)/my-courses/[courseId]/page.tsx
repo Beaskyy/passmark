@@ -1,14 +1,6 @@
 "use client";
 
 import EmptyState from "@/components/empty-state";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import {
   Form,
@@ -245,6 +237,127 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
       }
     );
   };
+
+  const studentColumns = [
+    {
+      id: "select",
+      header: ({ table }: { table: Table<Student> }) => (
+        <Checkbox
+          checked={table.getIsAllRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+          aria-label="Select all"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
+        />
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="border-[#E1E4EA] data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
+        />
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Student Name
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
+          />
+        </div>
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#C0D5FF] flex items-center justify-center text-sm font-medium text-[#122368]">
+            {getInitials(row.original.name)}
+          </div>
+          <span className="font-medium text-[#171717]">
+            {row.original.name}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "studentId",
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Student&apos;s ID
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
+          />
+        </div>
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <span className="text-[#171717]">{row.original.studentId}</span>
+      ),
+    },
+    {
+      accessorKey: "dateAdded",
+      header: ({ column }: { column: any }) => (
+        <div
+          className="flex items-center gap-0.5 cursor-pointer text-[#5C5C5C]"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Date Added
+          <Image
+            src="/images/up-down-fill.svg"
+            alt="up-down-fill"
+            width={20}
+            height={20}
+            style={{
+              transform:
+                column.getIsSorted() === "desc" ? "rotate(180deg)" : undefined,
+              opacity: column.getIsSorted() ? 1 : 0.5,
+            }}
+          />
+        </div>
+      ),
+      cell: ({ row }: { row: Row<Student> }) => (
+        <span className="text-[#171717]">
+          {formatDate(row.original.dateAdded)}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div>Actions</div>,
+      cell: ({ row }: { row: Row<Student> }) => (
+        <button
+          className="bg-white border border-[#EBEBEB] text-[#F63636] rounded-lg px-4 py-1.5 font-medium text-sm hover:bg-[#FFF0F0] transition-all drop-shadow-sm"
+          onClick={() => {
+            setStudentToDelete(row.original);
+            setDeleteDialogOpen(true);
+          }}
+        >
+          Delete Student
+        </button>
+      ),
+    },
+  ];
 
   return (
     <div className="lg:px-[108px] md:px-[20] p-5 pt-7">
@@ -839,7 +952,38 @@ const CourseId = ({ params }: { params: { courseId: string } }) => {
               )}
             </>
           </TabsContent>
-          <TabsContent value="students">Students here</TabsContent>
+          <TabsContent value="students">
+          <div className="mt-8">
+                  {isStudentsLoading ? (
+                    <div className="text-center py-8 text-[#8C8C8C]">
+                      Loading students...
+                    </div>
+                  ) : isStudentsError ? (
+                    <div className="text-center py-8 text-[#F63636]">
+                      {studentsError?.message || "Failed to load students."}
+                    </div>
+                  ) : studentsData.length > 0 ? (
+                    <DataTable
+                      columns={studentColumns}
+                      data={studentsData}
+                      searchKey="name"
+                      tableName="Student list"
+                      getId={(row) => row.id}
+                      showDeleteStudent={true}
+                      showStatusFilter={false}
+                    />
+                  ) : (
+                    <EmptyState
+                      image="/images/empty-state.svg"
+                      title="No student"
+                      desc="You've not added any student"
+                      link={`/my-courses/${courseId}/edit-students`}
+                      buttonText="Add student"
+                      showIcon={false}
+                    />
+                  )}
+                </div>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
