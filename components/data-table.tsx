@@ -175,12 +175,12 @@ export function DataTable<TData, TValue>({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
               )}
-              <div
+              {/* <div
                 className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85"
                 onClick={handleExport}
               >
@@ -191,16 +191,16 @@ export function DataTable<TData, TValue>({
                   height={20}
                 />
                 <p className="text-sm text-[#5C5C5C] font-medium">Export</p>
-              </div>
+              </div> */}
             </div>
-            {showDeleteStudent && (
+            {/* {showDeleteStudent && (
               <div className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85">
                 <Trash2 className="size-5 text-[#5C5C5C]" />
                 <p className="text-sm text-[#5C5C5C] font-medium">
                   Delete Student
                 </p>
               </div>
-            )}
+            )} */}
           </div>
         </div>
         <Table>
