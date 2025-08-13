@@ -82,7 +82,7 @@ export const columns: ColumnDef<MarkedScript>[] = [
           width={32}
           height={32}
         />
-       
+
         <div>
           <p className="font-medium">{row.original?.file_name}</p>
           <small className="text-xs text-[#5C5C5C]">
@@ -249,8 +249,10 @@ export const columns: ColumnDef<MarkedScript>[] = [
       const status = row.original?.status?.toLowerCase();
       const actions =
         status === "pending"
-          ? ["Approve"]
+          ? ["View Script", "Approve"]
           : status === "completed"
+          ? ["View Script"]
+          : status === "approved"
           ? ["View Script"]
           : [];
       return (

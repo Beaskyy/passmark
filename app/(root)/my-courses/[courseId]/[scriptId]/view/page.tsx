@@ -37,7 +37,7 @@ const View = () => {
           {[1, 2].map((pageNumber) => (
             <div
               key={pageNumber}
-              className="relative w-full lg:h-[556px] h-[200px]"
+              className="relative w-full lg:h-[556px] h-[300px] max-w-[581px] lg:left-[148px]"
             >
               <Image
                 src="/images/script-selection.svg"
@@ -50,7 +50,7 @@ const View = () => {
                 type="checkbox"
                 checked={selectedPages.includes(pageNumber)}
                 readOnly
-                className="absolute bottom-2 right-2 w-4 h-4"
+                className="absolute bottom-4 right-6 w-4 h-4 border-primary"
               />
             </div>
           ))}
