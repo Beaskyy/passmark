@@ -77,14 +77,14 @@ export const Header = () => {
         </div>
         <div className="flex items-center lg:gap-4 gap-1">
           <Popover open={showNotifications} onOpenChange={setShowNotifications}>
-            <PopoverTrigger className="hidden lg:flex cursor-pointer hover:opacity-80 transition-opacity">
+            {/* <PopoverTrigger className="hidden lg:flex cursor-pointer hover:opacity-80 transition-opacity">
               <Image
                 src="/images/notification.svg"
                 alt="notification"
                 width={40}
                 height={40}
               />
-            </PopoverTrigger>
+            </PopoverTrigger> */}
             {showNotifications && (
               <div
                 className="fixed inset-0 bg-black/20 z-40"
