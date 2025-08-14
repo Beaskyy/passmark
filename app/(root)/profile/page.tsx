@@ -111,9 +111,9 @@ const Profile = () => {
               </div>
             </div>
             <Dialog>
-              <DialogTrigger className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-[13px] text-xs font-medium">
+              {/* <DialogTrigger className="flex items-center gap-1 bg-gradient-to-t from-[#0089FF] to-[#0068FF] rounded-[10px] p-2.5 text-white lg:h-10 h-8 w-fit cursor-pointer hover:opacity-95 transition-all duration-300 lg:text-[13px] text-xs font-medium">
                 Update Password
-              </DialogTrigger>
+              </DialogTrigger> */}
               <DialogContent className="flex flex-col gap-10 lg:w-[448px] w-full">
                 <DialogHeader>
                   <DialogTitle className="text-[#111827] lg:text-xl text-balance font-semibold tracking-[-1%]">
