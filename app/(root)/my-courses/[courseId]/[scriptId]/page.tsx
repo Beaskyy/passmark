@@ -155,6 +155,7 @@ const ScriptId = ({
               router.push(`/marked-scripts/${row.script_id}`)
             }
             meta={{ onApprove: handleApprove }}
+            showFilter
           />
         </div>
       ) : (

@@ -62,8 +62,9 @@ interface DataTableProps<TData, TValue> {
   getId: (row: TData) => string | number;
   onRowClick?: (row: TData) => void;
   meta?: any; // Allow passing meta for table.options.meta
-  showStatusFilter?: boolean; // New prop
-  showDeleteStudent?: boolean; // New prop
+  showStatusFilter?: boolean;
+  showDeleteStudent?: boolean;
+  showFilter?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -76,6 +77,7 @@ export function DataTable<TData, TValue>({
   meta,
   showStatusFilter = true, // Default true
   showDeleteStudent = false, // Default false
+  showFilter
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -180,7 +182,7 @@ export function DataTable<TData, TValue>({
                   </SelectContent>
                 </Select>
               )}
-              {/* <div
+              {showFilter && <div
                 className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85"
                 onClick={handleExport}
               >
@@ -191,7 +193,7 @@ export function DataTable<TData, TValue>({
                   height={20}
                 />
                 <p className="text-sm text-[#5C5C5C] font-medium">Export</p>
-              </div> */}
+              </div>}
             </div>
             {/* {showDeleteStudent && (
               <div className="flex items-center gap-1 shadow-sm min-w-[96px] w-full h-9 rounded-[10px] border border-[#EBEBEB] py-2 px-2.5 bg-white cursor-pointer hover:opacity-85">
